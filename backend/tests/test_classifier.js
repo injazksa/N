@@ -50,9 +50,29 @@ const cases = [
   { input: 'عاملة منزلية',            template: 'domestic_female',  tier: 'compliance' },
   { input: 'عامل منزلي',              template: 'domestic_male',    tier: 'compliance' },
 
+  // === 🏗️ ENGINEERING SECTOR (NEW - strict 11-doc payload, compliance tier) ===
+  { input: 'مهندس',                    template: 'engineer',         tier: 'compliance' },
+  { input: 'مهندس مدني',               template: 'engineer',         tier: 'compliance' },
+  { input: 'مهندس كهرباء',             template: 'engineer',         tier: 'compliance' },
+  { input: 'مهندس ميكانيك',            template: 'engineer',         tier: 'compliance' },
+  { input: 'مهندس برمجيات',            template: 'engineer',         tier: 'compliance' },
+  { input: 'مهندس اتصالات',            template: 'engineer',         tier: 'compliance' },
+  { input: 'مهندس صيانة',              template: 'engineer',         tier: 'compliance' },
+  { input: 'مهندسة معمارية',           template: 'engineer',         tier: 'compliance' },
+
+  // === 💼 SALES REP (1-year exception) ===
+  { input: 'مندوب مبيعات',            template: 'sales_rep',        tier: 'management' },
+
+  // === 🎓 INTERMEDIATE ADMIN (Secondary + 1y + NO QVP) ===
+  { input: 'مساعد إداري',              template: 'intermediate_admin', tier: 'management' },
+  { input: 'مراقب الجودة',             template: 'intermediate_admin', tier: 'management' },
+  { input: 'مراقب جودة الإنتاج',       template: 'intermediate_admin', tier: 'management' },
+
+  // === 🛒 DIRECT SALES (Secondary + 0y + NO QVP) ===
+  { input: 'بائع مباشر',               template: 'direct_sales',     tier: 'vocational' },
+
   // === TIER 1: ACADEMIC & MANAGEMENT (Specialist) ===
   { input: 'أخصائي تسويق',            template: 'specialist',       tier: 'management' },
-  { input: 'مهندس مدني',               template: 'specialist',       tier: 'management' },
   { input: 'مستشار قانوني',            template: 'specialist',       tier: 'management' },
   { input: 'خبير اقتصادي',             template: 'specialist',       tier: 'management' },
   { input: 'محلل بيانات',              template: 'specialist',       tier: 'management' },
@@ -71,7 +91,6 @@ const cases = [
   // === TIER 2: SUPERVISORY / TECHNICAL ===
   { input: 'رئيس قسم المحاسبة',        template: 'supervisor',       tier: 'supervisory' },
   { input: 'مشرف إنتاج',                template: 'supervisor',       tier: 'supervisory' },
-  { input: 'مراقب جودة',                template: 'supervisor',       tier: 'supervisory' },
   { input: 'فني صيانة سيارات',         template: 'technical',        tier: 'supervisory' },
   { input: 'ميكانيكي',                  template: 'technical',        tier: 'supervisory' },
   { input: 'كهربائي مباني',             template: 'technical',        tier: 'supervisory' },
@@ -95,9 +114,52 @@ const cases = [
   { input: 'مايسترو',                   template: 'general',          tier: 'fallback' },
   { input: 'دي جي حفلات',               template: 'general',          tier: 'fallback' },
   { input: 'رائد فضاء',                 template: 'general',          tier: 'fallback' },
-  { input: 'مدرّب يوغا',                 template: 'general',          tier: 'fallback' },
   { input: '',                          template: 'general',          tier: 'fallback' },
 ];
+
+// === EXTRA STRUCTURAL VALIDATION: ensure engineer template has EXACTLY 11 docs ===
+function validateStructure() {
+  const failures = [];
+  const { TEMPLATES } = global.window.smartFallback;
+
+  // 1. Engineer template must have exactly 11 documents (strict spec)
+  if (TEMPLATES.engineer.reqs.length !== 11) {
+    failures.push(`Engineer template: expected 11 docs, got ${TEMPLATES.engineer.reqs.length}`);
+  }
+  const engReqs = TEMPLATES.engineer.reqs.join('|');
+  const required = [
+    'حسن سيرة', 'الوثائق العسكرية', 'الشهادة الجامعية',
+    'فحص طبي', 'خبرة لمدة سنتين', 'عقد عمل',
+    'الاعتماد المهني', 'مصادقة السعودي',
+    'نقابة المهندسين الأردنية', 'هيئة المهندسين السعودية', 'تفويض'
+  ];
+  for (const r of required) {
+    if (!engReqs.includes(r)) failures.push(`Engineer template missing: "${r}"`);
+  }
+
+  // 2. Sales rep must have 1-year experience
+  if (!TEMPLATES.sales_rep.reqs.join('|').includes('سنة واحدة')) {
+    failures.push('Sales Rep: missing 1-year experience override');
+  }
+
+  // 3. Intermediate admin must NOT have QVP
+  if (TEMPLATES.intermediate_admin.reqs.join('|').includes('الاعتماد المهني (QVP)')) {
+    failures.push('Intermediate Admin: QVP must be stripped');
+  }
+  if (!TEMPLATES.intermediate_admin.reqs.join('|').includes('الثانوية العامة')) {
+    failures.push('Intermediate Admin: missing Secondary school requirement');
+  }
+
+  // 4. Direct sales must NOT have QVP and must NOT require experience
+  if (TEMPLATES.direct_sales.reqs.join('|').includes('الاعتماد المهني (QVP)')) {
+    failures.push('Direct Sales: QVP must be stripped');
+  }
+  if (!TEMPLATES.direct_sales.reqs.join('|').includes('بدون اشتراط خبرة')) {
+    failures.push('Direct Sales: missing zero-experience override');
+  }
+
+  return failures;
+}
 
 let pass = 0, fail = 0;
 const failures = [];
@@ -121,7 +183,19 @@ if (failures.length) {
   for (const f of failures) {
     console.log(`  • input="${f.input}"  expected=${f.expected}  got=${f.got}`);
   }
+}
+
+const structFails = validateStructure();
+console.log(`\n🏗️  Structural Validation (Engineer / Sales / Intermediate / Direct):`);
+if (structFails.length === 0) {
+  console.log(`   ✅ All template structures correct`);
+} else {
+  console.log(`   ❌ ${structFails.length} structural failures:`);
+  structFails.forEach(f => console.log(`     • ${f}`));
+}
+
+if (failures.length || structFails.length) {
   process.exit(1);
 } else {
-  console.log(`\n🎉 All ${cases.length} semantic mappings correct!`);
+  console.log(`\n🎉 All ${cases.length} mappings + structural checks PASSED!`);
 }

@@ -201,3 +201,55 @@ Instead of first-match wins, the classifier collects **ALL** keyword hits and se
 - ✏️ `/app/smart-fallback.js` — Complete classifier refactor (RULES + matchTemplate + general template + TIER_LABELS)
 - 🆕 `/app/backend/tests/test_classifier.js` — Headless regression suite
 
+---
+
+## ✅ Round 7: Engineering Sector Hotfix + Experience Overrides + UI Fixes (2026-02-21)
+
+### 🏗️ Engineering Sector — Strict 11-Doc Production Payload
+المهندسون كانوا يقعون على specialist track (ناقص JEA/SCE/مصادقة). الحين عندنا **template `engineer` مستقل** مع 11 وثيقة بالضبط:
+
+1. حسن سيرة وسلوك (المخابرات)
+2. الوثائق العسكرية + جواز + 6 صور
+3. الشهادة الجامعية (الأصل) + كشف العلامات الأصل
+4. فحص طبي معتمد
+5. **خبرة لمدة سنتين بنفس مسمى التأشيرة**
+6. عقد عمل + خطاب إطلاع مختومين
+7. الاعتماد المهني
+8. **شهادة من موقع مصادقة السعودي** ← جديد
+9. **عضوية + مزاولة مهنة من نقابة المهندسين الأردنية** ← جديد
+10. **التسجيل في هيئة المهندسين السعودية** ← جديد
+11. عمل تفويض للمكتب
+
+**Routing**: ترقّى لـ tier `compliance` ليتجاوز أي قاعدة technical (كان "صيانة" يطغى على "مهندس" في "مهندس صيانة"). الآن أي input فيه "مهندس" يذهب لـ engineer مع 100% دقة.
+
+### 💼 Experience Override Templates (3 جديدة)
+| Template | Trigger | Education | Experience | QVP |
+|---|---|---|---|---|
+| `sales_rep` | مندوب مبيعات | جامعية | **سنة واحدة** | ❌ stripped |
+| `intermediate_admin` | مساعد إداري / مراقب الجودة | **ثانوية عامة** | سنة واحدة | ❌ stripped |
+| `direct_sales` | بائع مباشر | ثانوية عامة | **بدون خبرة** | ❌ stripped |
+
+### 🛡️ Zero-Duplication Rule
+أضفنا دالة `distinct()` تشغل قبل render و print، تطبّع المسافات وعلامات الترقيم وتمنع تكرار أي bullet (مثلاً لو حدث gender swap أعاد جلب نفس الفقرة).
+
+### 🐛 UI Fixes
+1. **X Close Button on Mobile (was freezing)**:
+   - **قبل**: `['click', 'touchend'].forEach(...)` كان يولّد double-fire/ghost-click hangs على iOS
+   - **بعد**: `click` فقط (مع `touch-action: manipulation` من Tailwind) → موثوق على كل المتصفحات
+2. **Auto-Focus Anchor**: smooth scroll للموديل + scroll الـ inner body للأعلى عشان المستخدم يرى الأوراق فوراً
+3. **Engineering Promotion to Compliance Tier**: لمنع أي حالة طغيان (e.g., "مهندس صيانة" → engineer ليس technical)
+
+### Test Coverage
+- 📊 **53/53 mapping tests passed** (including 8 engineering variants + 4 override types + Universal fallback)
+- 🏗️ **Structural validation**: Engineer has exactly 11 docs, Sales/Intermediate/Direct have correct experience strings + NO QVP
+
+### Files Modified
+- ✏️ `/app/smart-fallback.js`:
+  - 4 جداول جديدة (engineer, sales_rep, intermediate_admin, direct_sales)
+  - 4 ثوابت جديدة (ENG_DEGREE, ENG_EXP_*, ENG_ACCRED, ENG_MUSADAQA, ENG_JEA, ENG_SCE, AUTH_OFFICE, SECONDARY_SCHOOL)
+  - `distinct()` filter للـ rendering والـ printing
+  - Close button event handler refactor (single 'click')
+  - Inner-body smooth scroll
+- ✏️ `/app/backend/tests/test_classifier.js`: +20 حالة اختبار جديدة + structural validation
+
+

@@ -34,6 +34,19 @@
   const SCHOOL   = 'إحضار الشهادة المدرسية (الأصل)';
   const DRIVER_LICENSE = 'صورة عن رخصة السياقة مختومة من إدارة الترخيص';
 
+  // === ENGINEERING-SPECIFIC SHARED CONSTANTS (Strict Production Payload) ===
+  // Cloned/referenced — NEVER hardcoded inside business logic.
+  const ENG_DEGREE       = 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل';
+  const ENG_EXP_2Y       = 'خبرة لمدة سنتين بنفس مسمى التأشيرة';
+  const ENG_EXP_1Y       = 'خبرة سنة واحدة بنفس مسمى التأشيرة';
+  const ENG_EXP_NONE     = 'بدون اشتراط خبرة سابقة';
+  const ENG_ACCRED       = 'الحصول على شهادة الاعتماد المهني';
+  const ENG_MUSADAQA     = 'الحصول على شهادة من موقع مصادقة السعودي';
+  const ENG_JEA          = 'عضوية + مزاولة مهنة من نقابة المهندسين الأردنية';
+  const ENG_SCE          = 'التسجيل في هيئة المهندسين السعودية';
+  const AUTH_OFFICE      = 'عمل تفويض للمكتب';
+  const SECONDARY_SCHOOL = 'إحضار شهادة الثانوية العامة (التوجيهي) — الأصل';
+
   const TEMPLATES = {
     executive: {
       label: 'مسار المستثمر / المدير العام',
@@ -60,14 +73,71 @@
       ]
     },
     specialist: {
-      label: 'مسار الاختصاصي / المهندس',
+      label: 'مسار الاختصاصي',
       icon: 'fa-user-graduate',
       reqs: [
         SECURITY, MILITARY, DEGREE,
-        'خبرة لا تقل عن 3 سنوات في نفس الاختصاص',
+        ENG_EXP_2Y,           // ← UPDATED: "خبرة لمدة سنتين بنفس مسمى التأشيرة"
         MEDICAL, CONTRACT,
         'شهادة تصنيف مهني من الهيئة المختصة',
         QVP, VACCINE, BIO, AUTH, PASSPORT, ATTEST
+      ]
+    },
+    // 🏗️ ENGINEERING SECTOR — STRICT PRODUCTION PAYLOAD (11 verified docs, no extras)
+    // Required because regular Specialist track is incomplete for engineers (missing
+    // JEA membership, SCE registration, مصادقة السعودي).
+    engineer: {
+      label: 'مسار المهندسين',
+      icon: 'fa-helmet-safety',
+      reqs: [
+        SECURITY,
+        MILITARY_FULL,        // includes passport + 6 photos
+        ENG_DEGREE,           // 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل'
+        MEDICAL,
+        ENG_EXP_2Y,           // 'خبرة لمدة سنتين بنفس مسمى التأشيرة'
+        CONTRACT,
+        ENG_ACCRED,           // 'الحصول على شهادة الاعتماد المهني'
+        ENG_MUSADAQA,         // 'الحصول على شهادة من موقع مصادقة السعودي'
+        ENG_JEA,              // 'عضوية + مزاولة مهنة من نقابة المهندسين الأردنية'
+        ENG_SCE,              // 'التسجيل في هيئة المهندسين السعودية'
+        AUTH_OFFICE           // 'عمل تفويض للمكتب'
+      ]
+    },
+    // High-tier specialist with reduced experience requirement (مندوب مبيعات)
+    sales_rep: {
+      label: 'مسار مندوبي المبيعات',
+      icon: 'fa-handshake',
+      reqs: [
+        SECURITY, MILITARY, DEGREE,
+        ENG_EXP_1Y,           // ← OVERRIDE: 1 year only
+        MEDICAL, CONTRACT,
+        VACCINE, BIO, AUTH, PASSPORT, ATTEST
+      ]
+    },
+    // Intermediate academic track — High School + 1 year + NO QVP
+    intermediate_admin: {
+      label: 'مسار الكوادر المساعدة (الإداريين / المراقبة)',
+      icon: 'fa-clipboard-check',
+      reqs: [
+        SECURITY, MILITARY,
+        SECONDARY_SCHOOL,     // ← FORCE: Secondary instead of Degree
+        ENG_EXP_1Y,           // 1 year experience
+        MEDICAL, CONTRACT,
+        VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        // ⚠️ NO QVP — explicitly stripped per spec
+      ]
+    },
+    // No-experience entry track — بائع مباشر
+    direct_sales: {
+      label: 'مسار البيع المباشر',
+      icon: 'fa-store',
+      reqs: [
+        SECURITY, MILITARY,
+        SECONDARY_SCHOOL,
+        ENG_EXP_NONE,         // No prior experience required
+        MEDICAL, CONTRACT,
+        VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        // ⚠️ NO QVP — explicitly stripped per spec
       ]
     },
     supervisor: {
@@ -218,18 +288,27 @@
         'فني مختبر طبي', 'فني أشعة', 'فني اشعة'
       ]
     },
+    // 🏗️ ENGINEERING SECTOR — PROMOTED to compliance tier so it beats Technical's "صيانة"
+    // and Specialist's "مدير". Any input containing "مهندس" routes here with strict 11-doc payload.
+    {
+      id: 'engineer', template: 'engineer', tier: 'compliance',
+      keywords: [
+        'مهندس', 'مهندسه', 'مهندسة', 'مهندسين', 'مهندسات',
+        'م.', 'engineer'
+      ]
+    },
 
     // ─── TIER 2: SUPERVISORY & TECHNICAL OPERATIONS ───
     // (Must come BEFORE Tier 1 so "رئيس قسم" beats "رئيس")
     {
       id: 'supervisor', template: 'supervisor', tier: 'supervisory',
-      keywords: ['رئيس قسم', 'رئيس شيفت', 'مسؤول قسم', 'مشرف عام', 'مشرف إنتاج', 'مشرف انتاج', 'مشرف موقع', 'مشرف', 'مراقب جودة', 'مراقب', 'منسق', 'كبير']
+      keywords: ['رئيس قسم', 'رئيس شيفت', 'مسؤول قسم', 'مشرف عام', 'مشرف إنتاج', 'مشرف انتاج', 'مشرف موقع', 'مشرف', 'مراقب', 'منسق', 'كبير']
     },
     {
       id: 'technical', template: 'technical', tier: 'supervisory',
       keywords: [
         'فني صيانة', 'فني تكييف', 'فني تبريد', 'فني', 'ميكانيكي', 'ميكانيكية',
-        'كهربائي', 'كهربائية', 'مهندس صيانة',
+        'كهربائي', 'كهربائية',
         'حداد', 'نجار', 'سباك', 'صحي', 'لحام', 'مبرد', 'مكيف', 'صياغ',
         'تركيب', 'صيانة', 'دهان', 'بلاط', 'مبلط', 'مصلح'
       ]
@@ -246,11 +325,28 @@
         'ceo', 'cfo', 'cto', 'coo', 'مستثمر', 'رئيس شركة'
       ]
     },
+    // 🏗️ ENGINEERING SECTOR — STRICT RULE (BEFORE specialist so "مهندس" routes here)
+    // Already defined at compliance tier above — this duplicate is intentionally removed.
+    // 💼 Sales Rep — clones specialist baseline but with 1-year experience override
+    {
+      id: 'sales_rep', template: 'sales_rep', tier: 'management',
+      keywords: ['مندوب مبيعات', 'مندوبه مبيعات', 'مندوبة مبيعات', 'مندوب بيع', 'sales rep']
+    },
+    // 🎓 Intermediate Admin / Quality Monitor — Secondary school + 1 year + NO QVP
+    {
+      id: 'intermediate_admin', template: 'intermediate_admin', tier: 'management',
+      keywords: ['مساعد إداري', 'مساعد اداري', 'مساعدة إدارية', 'مساعده اداريه',
+                 'مراقب الجودة', 'مراقب جودة', 'مراقبة الجودة', 'مراقبه جوده']
+    },
+    // 🛒 Direct Sales — Secondary school + NO experience + NO QVP
+    {
+      id: 'direct_sales', template: 'direct_sales', tier: 'vocational',
+      keywords: ['بائع مباشر', 'بائعة مباشرة', 'بائعه مباشره']
+    },
     {
       id: 'specialist', template: 'specialist', tier: 'management',
       keywords: [
         'أخصائي', 'اخصائي', 'أخصائيه', 'أخصائية', 'اخصائية',
-        'مهندس', 'مهندسه', 'مهندسة',
         'دكتور', 'دكتوره', 'دكتورة',
         'مستشار', 'مستشاره', 'مستشارة',
         'خبير', 'خبيره', 'خبيرة',
@@ -571,12 +667,19 @@
     document.body.style.overflow = 'hidden'; // lock scroll
     renderRequirements();
 
-    // Wire close events — use BOTH click and touch for max reliability
+    // ─── Close button: SINGLE handler using 'click' (works reliably on mobile
+    //     when combined with touch-action: manipulation, which Tailwind already
+    //     provides). Using BOTH click+touchend caused double-fire / ghost-click
+    //     hangs on iOS Safari. ───
     const closeBtn = document.getElementById('generated-sheet-close');
     const overlay  = document.getElementById('generated-sheet-overlay');
-    ['click', 'touchend'].forEach(ev => {
-      closeBtn.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); closeGeneratedSheet(); }, { passive: false });
-      overlay.addEventListener(ev, function (e) { if (e.target === overlay) { e.preventDefault(); closeGeneratedSheet(); } }, { passive: false });
+    const closeHandler = function (e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      closeGeneratedSheet();
+    };
+    closeBtn.addEventListener('click', closeHandler);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeHandler(e);
     });
     // Also ESC key
     document.addEventListener('keydown', escClose);
@@ -597,10 +700,13 @@
       });
     });
 
-    // 📍 Anchor scroll to modal smoothly
+    // 📍 Anchor scroll: smoothly scroll the document layout block into view.
+    //    Scrolls both the page (to surface the modal) AND the modal body to top.
     setTimeout(() => {
       const modal = document.getElementById('generated-sheet-modal');
       if (modal) modal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const body  = modal && modal.querySelector('.overflow-y-auto');
+      if (body) body.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
 
     // FB Pixel
@@ -621,20 +727,40 @@
     if (e.key === 'Escape') closeGeneratedSheet();
   }
 
+  /**
+   * Strict array-deduplication helper.
+   * Normalises whitespace before comparison so e.g. trailing periods or
+   * extra spaces still hit the same bucket. Preserves first-seen order.
+   */
+  function distinct(arr) {
+    const seen = new Set();
+    const out = [];
+    for (const item of arr) {
+      const key = String(item || '').trim().replace(/\s+/g, ' ').replace(/\.$/, '');
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(item);
+    }
+    return out;
+  }
+
   function renderRequirements() {
     if (!currentGenerated) return;
     const list = document.getElementById('generated-sheet-list');
     if (!list) return;
     const { template, gender } = currentGenerated;
 
-    // Top-tier executive doesn't swap (commercial track)
+    // Top-tier executive / engineer / forced templates don't swap (commercial / no-military tracks)
     const noSwap = template.genderLocked || template.forcedGender;
-    const finalReqs = template.reqs.map((req) => {
+    let finalReqs = template.reqs.map((req) => {
       if (!noSwap && gender === 'female' && (req.includes('الوثائق العسكرية') || req.includes('مشروحات من القيادة'))) {
         return FEMALE_PERMISSION;
       }
       return req;
     });
+
+    // ✅ Strict no-duplication: prevent any bullet from repeating after gender swap
+    finalReqs = distinct(finalReqs);
 
     list.innerHTML = finalReqs.map((r, i) => {
       const isNote = r.includes('ملاحظة هامة');
@@ -660,10 +786,10 @@
     if (!currentGenerated) return;
     const { userTitle, template, gender } = currentGenerated;
     const noSwap = template.genderLocked || template.forcedGender;
-    const finalReqs = template.reqs.map((r) =>
+    const finalReqs = distinct(template.reqs.map((r) =>
       !noSwap && gender === 'female' && (r.includes('الوثائق العسكرية') || r.includes('مشروحات من القيادة'))
         ? FEMALE_PERMISSION : r
-    );
+    ));
     if (typeof window.printProfessionDocument === 'function') {
       window.printProfessionDocument('AUTO', userTitle, finalReqs);
     }
