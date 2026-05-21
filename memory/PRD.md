@@ -1,86 +1,88 @@
-# PRD — saudia-visa.com SEO & Branding Overhaul
+# PRD — saudia-visa.com Complete Overhaul (Tasks 1-11 + Integration Round)
 
 ## Original Problem Statement
 موقع HTML/CSS/JS ثابت لمكتب تأشيرات السعودية في الأردن (Netlify-hosted).
-المطلوب: تنفيذ تقرير تقني شامل (11 مهمة) لتحسين SEO، حذف رقم الترخيص 22128 كاملاً، تنظيف قاعدة المهن من الأكواد الوهمية، تركيب الأيقونة الرسمية الجديدة بخلفية شفافة، وتفعيل Facebook Pixel + WhatsApp tracking.
+3 جولات تحسينات: SEO/Branding + قاعدة بيانات المهن + التكامل البرمجي مع الأنظمة الحالية.
 
-## Architecture / Tech Stack
-- **Frontend**: HTML5 / Tailwind CDN / Vanilla JS (موقع ثابت بدون build)
-- **Hosting**: Netlify (`netlify.toml` + `_redirects` + `_headers`)
-- **CMS**: Netlify CMS لمدونة الـ blog (في `/admin-secure/`)
-- **Schema**: JSON-LD via `schema-markup.js`
-- **Analytics**: Facebook Pixel (ID: 2499298600459646) + Google Analytics (G-4B2WJZ75XG)
+## Architecture
+- **Frontend**: HTML5 / Tailwind CDN / Vanilla JS (static)
+- **Hosting**: Netlify
+- **Analytics**: Facebook Pixel (2499298600459646) + GA4 (G-4B2WJZ75XG)
+- **Logo**: Transparent PNG/SVG (السيف والنخلة - نيلي/ذهبي)
 
 ## Completed (2026-01)
 
-### ✅ Tasks 1-9 (Round 1: SEO + Branding cleanup)
-- **حذف 141 إشارة لرقم 22128** من 31 ملف + إعادة تسمية `admin-sv22128/` → `admin-secure/`
-- **17 صفحة** تم إصلاحها لتحتوي على H1 واحد فقط
-- **3 صفحات قانونية** أصبحت `noindex, nofollow` + حُذفت من sitemap
-- **blog-post.html** أُعيد بناؤها بمحتوى ثري (~307 كلمة) + internal link من footer
-- **Single-step redirect chain** في `_redirects` و `netlify.toml` (HTTPS + Non-WWW)
-- **Favicon + OG image dimensions** أُضيفت لـ 20+ صفحة
-- **Schema.org** نُظِّف بالكامل (حذف hasCredential)
-- **Meta descriptions** المطلوبة محدّثة
+### ✅ Round 1: Tasks 1-9 (SEO + Branding)
+- حذف 141 إشارة لرقم 22128 + إعادة تسمية admin folder
+- 17 صفحة بـ H1 واحد + 3 صفحات قانونية noindex
+- blog-post.html غني (307 كلمة) + internal links
+- Single-step redirects (HTTPS + Non-WWW)
+- Favicon + OG + Schema.org cleanup
 
-### ✅ Task 10: تنظيف قاعدة المهن (Round 2)
-- **حذف 529 كود وهمي** من `professions.json` (كانت بصيغ ADD1094, 124600, 999001 إلخ — كلها غير موجودة في القاموس الرسمي)
-- **263 مهنة نهائية** بأكواد رسمية صحيحة:
-  - 232 مهنة من القاموس الرسمي (ISCO/SCO 6-digit codes) موجودة في PDF
-  - 31 مهنة مضافة بالأكواد المحددة في رسالة المستخدم (300003, 932101-104, 933101-104, 332201/301, 242203/211 إلخ)
-- **0 كلمات "عامل" مجردة** — كلها استُبدلت بمسميات تفصيلية (عامل إنتاج ومصنع، عامل تعبئة رفوف، عامل شحن وتفريغ إلخ)
-- **5 قطاعات منظمة**: المديرون، القطاع الإداري والتجاري والمالي، قطاع المبيعات والتسويق، قطاع العمالة التشغيلية والتعبئة، القطاع الفني والحرفي
+### ✅ Round 2: Tasks 10-11 (Pixel + Logo + Database)
+- Facebook Pixel + WhatsApp/Phone/Email tracking على 21 صفحة
+- الأيقونة الجديدة بخلفية شفافة (PNG RGBA) — 5 أحجام + favicon.ico + favicon.svg
+- حذف 529 كود وهمي → 263 مهنة بأكواد رسمية موثقة
 
-### ✅ Task 11.1: Facebook Pixel + WhatsApp Tracking
-- **Pixel ID**: 2499298600459646 (مفعّل في 21 صفحة)
-- **ملف**: `/marketing-pixel.js` يحتوي على:
-  - Base Pixel code (PageView auto)
-  - `ClickWhatsApp` custom event على جميع روابط `wa.me`
-  - `ClickPhone` custom event على روابط `tel:`
-  - `ClickEmail` custom event على روابط `mailto:`
-  - `Lead` standard event عند نقر WhatsApp أو Phone
-  - `Contact` standard event عند نقر Email
-- **MutationObserver** يتابع DOM للارتباطات الديناميكية (مهم لصفحة المهن)
-- **noscript fallback**: `<img>` pixel لمن لديهم JavaScript معطل
-- **CSP محدّث** في `_headers` للسماح بـ `connect.facebook.net` و `facebook.com/tr`
+### ✅ Round 3: Integration with Existing Systems (Latest)
 
-### ✅ Task 11.2: Transparent Logo Assets
-- **الأيقونة الجديدة** (السيف والنخلة - نيلي وذهبي) معالجة من JPG → PNG بخلفية شفافة
-- **5 أحجام** مُولّدة من الـ source: 512×512، 192×192، 180×180 (apple-touch-icon)، 32×32، 16×16
-- **favicon.ico** متعدد الأحجام (16، 32، 48، 64)
-- **favicon.svg** أُعيد رسمها لتطابق التصميم الدائري الجديد
-- جميع الأصول وضعت في `/icons/` و الجذر، مفعّلة عبر `<link>` tags في كل الصفحات
+#### 1. Dynamic Document Inheritance (وراثة الأوراق المطلوبة)
+- بُني نظام **Category Templates** لكل قطاع له template أوراق كامل (10-12 وثيقة)
+- المهن الجديدة (عامل تعبئة، مدير عام، مندوب مبيعات إلخ) ترث أوراق قطاعها تلقائياً
+- 3 مهن top-tier (CEO/General Manager/مستثمر) لها مسار "السجل التجاري + هيئة الاستثمار" بدلاً من العسكرية
+- Top tier = 3 مهنة، Standard tracks = 260 مهنة
+- متوسط 10.2 وثيقة لكل مهنة
 
-## Verification Results
-- ✅ Screenshot: index.html — أيقونة جديدة + H1 واحد + 0 ذكر لـ 22128
-- ✅ Screenshot: blog-post.html — H1 صحيح + محتوى 307 كلمة
-- ✅ Screenshot: professions.html — 263 مهنة + كلها بأكواد صحيحة (112001، 112002 إلخ)
-- ✅ Live test: WhatsApp click → fbq trigger verified:
-  - `trackCustom('ClickWhatsApp', {...})` fired ✅
-  - `track('Lead', { content_name: 'WhatsApp Contact' })` fired ✅
-- ✅ 0 references لـ "22128" في أي ملف
-- ✅ logo-512.png mode=RGBA (transparent confirmed)
+#### 2. Gender Switch (تبديل ذكر/أنثى)
+- جميع المهن مخزنة بصيغة canonical "ذكر" (مع الوثائق العسكرية)
+- 260/263 مهنة لديها "الوثائق العسكرية" — قابلة للتبديل التلقائي
+- عند اختيار "أنثى" في الفلتر، الـ JS يبدّل ديناميكياً إلى "عدم ممانعة من ولي الأمر"
+- **اختبار حي ناجح**: تأكدنا من التبديل يعمل على عامل إنتاج (932101)
 
-## Files Modified Summary
-- HTML pages: 23 ملف (Pixel + favicon + canonical + noindex)
-- Logo assets: 6 ملفات (logo-192.png, logo-512.png, apple-touch-icon.png, favicon.ico, favicon-32x32.png, favicon.svg)
-- New files: `marketing-pixel.js`, `professions.json` (rebuilt clean)
-- Configs: `_headers` (CSP), `_redirects`, `netlify.toml`, `sitemap.xml`, `robots.txt`
+#### 3. Global Search Integration
+- البحث يعمل بالكود (مثل 932101) → 1 نتيجة فورية
+- البحث بالاسم العربي (مثل "مدير عام") → 2 نتيجة
+- البحث المختلط مدعوم (normalizeArabic للهمزات والياء)
 
-## Deployment Notes
-- الموقع جاهز للنشر مباشرة على Netlify
-- بعد النشر: التحقق من فيسبوك Events Manager لظهور أحداث `PageView`, `ClickWhatsApp`, `Lead`
-- إعادة تقديم Sitemap في GSC
-- اختبار Rich Results
+#### 4. Counter Synchronization
+- العدّاد محدّث من **761+ → 263+** في 6 صفحات (index, about, professions, corporate, faq, work-visa)
+- العدد يعكس الواقع الفعلي للمهن المحققة بأكواد رسمية
 
-## Backlog / P1 (Future)
-- إضافة باقي 770 مهنة من القاموس الرسمي (تحتاج ترجمة الأسماء العربية يدوياً من PDF)
-- إنشاء `og-image.png` بحجم 1200×630 احترافي للمشاركة على Facebook/WhatsApp
-- استبدال `REPLACE_WITH_GSC_CODE` بكود Google Search Console الحقيقي
-- اختبار A/B لرسالة WhatsApp الافتراضية لزيادة معدل التحويل
+#### 5. Sub-Categorization (ISCO Standard)
+- 9 قطاعات فرعية ديناميكية بناءً على prefix الكود (11/12/13/14/...)
+- توزيع متنوع: 146 مدراء إنتاج، 63 مدراء إداريون، 13 عمالة تشغيلية، 12 فنادق/مطاعم، 9 كبار مسؤولين، 8 فني/حرفي، 7 إداري/تجاري، 3 مبيعات
 
-## Marketing Numbers Reality Check
-- العداد المعروض في الموقع: "761+ مهنة" (تسويقي)
-- العدد الفعلي بعد التنظيف: 263 مهنة بأكواد موثقة 100%
-- القاموس الرسمي الكامل: 1006 مهنة (يمكن الوصول إليها مستقبلاً)
-- **توصية**: استبدال "761+ مهنة" بـ "+250 مهنة بأكواد موثقة" أو "+1000 مهنة في القاموس الرسمي" حسب التفضيل التسويقي
+## Verification (Live Tests Passed)
+- ✅ Screenshot: عامل إنتاج (932101) → 11 وثيقة كاملة + الأيقونة الجديدة + الفئة "قطاع العمالة التشغيلية"
+- ✅ Gender switch: ذكر → أنثى → الوثائق العسكرية اختفت، عدم ممانعة ولي الأمر ظهرت
+- ✅ Search by code: 932101 → 1 نتيجة
+- ✅ Search by name: "مدير عام" → 2 نتيجة
+- ✅ Facebook Pixel: WhatsApp click → fbq events fired (ClickWhatsApp + Lead)
+
+## Key Numbers
+| Metric | Value |
+|---|---|
+| إجمالي المهن | 263 (كانت 761، منها 529 كود وهمي) |
+| المهن بأكواد PDF رسمية | 232 |
+| المهن المضافة بطلب صريح | 31 |
+| متوسط الوثائق لكل مهنة | 10.2 |
+| المهن قابلة للتبديل (ذكر/أنثى) | 260/263 |
+| مسار المستثمر (Top-Tier exempt) | 3 |
+| القطاعات الفرعية | 9 |
+| كلمات "عامل" مجردة | 0 |
+| Facebook Pixel pages | 21 |
+
+## Future Backlog
+- **توسيع قاعدة البيانات**: إضافة باقي 770 مهنة من القاموس الرسمي (1006 إجمالي) — تحتاج معالجة 46 صفحة PDF
+- **OG image 1200×630** للمشاركة الاحترافية
+- **Apple touch icon 180×180** مخصص (حالياً يعيد استخدام logo-180)
+- استبدال `REPLACE_WITH_GSC_CODE` بكود Search Console
+- **Custom Audience** على Meta Ads من زوار wa.me click للـ Retargeting
+
+## Files Modified This Round
+- `/app/professions.json` — قاعدة بيانات نظيفة (263 مهنة)
+- `/app/marketing-pixel.js` — Facebook Pixel + Click Tracking
+- `/app/icons/logo-*.png`, `/app/favicon.*` — أصول الشعار الشفاف
+- `/app/_headers` — CSP محدّث للسماح بـ Facebook resources
+- 23 HTML files — Pixel injection + counter update + favicon links
+
