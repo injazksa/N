@@ -1,12 +1,14 @@
 /**
- * 🧠 Smart Fallback Search System (Task 12 + Hotfix)
+ * 🧠 Smart Fallback Search System (Task 12 + Universal Semantic Classifier)
  * Saudia Visa Jordan — 2026
  *
- * Features:
- *  - Entity-based keyword matching (7 templates)
- *  - Forced templates for Domestic/Driving (no Specialist fallback)
- *  - Pre-search gender selector
- *  - Mobile-optimized UI (touch-safe X, smooth-scroll anchor)
+ * v3.0 — Universal Rule-Based Taxonomy Classifier:
+ *  - 3-Tier Semantic Mapping (Academic/Mgmt → Supervisory/Technical → Vocational/Labor)
+ *  - Longest-prefix matching (multi-word phrases beat single words)
+ *  - Universal Safe Fallback (general visa template, NEVER broken state)
+ *  - Specialized compliance routes preserved (Medical/Driver/Domestic)
+ *  - Pre-search gender selector + Live gender switch
+ *  - Custom user title echoed at sheet header
  */
 (function () {
   'use strict';
@@ -157,81 +159,193 @@
         'خبرة لمدة سنة على الأقل',
         MEDICAL, CONTRACT, VACCINE, BIO, AUTH, PASSPORT, ATTEST
       ]
+    },
+    // === UNIVERSAL SAFE FALLBACK ===
+    // Used when input doesn't match any semantic keyword group.
+    // Prints standard general-visa requirements + echoes user's custom title.
+    general: {
+      label: 'المسار العام للتأشيرة',
+      icon: 'fa-passport',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        MEDICAL,
+        VACCINE,
+        CONTRACT,
+        AUTH,
+        PASSPORT,
+        ATTEST,
+        'ملاحظة هامة جداً: هذه قائمة المتطلبات الأساسية لتأشيرة العمل السعودية. للحصول على القائمة الدقيقة لمهنتك المحددة، يرجى التواصل معنا عبر واتساب وسنرسل لك التفاصيل الإضافية (شهادات/تصديقات/اختبارات) خلال 15 دقيقة.'
+      ]
     }
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // 🔍 ENHANCED RULE ENGINE — ORDERED BY SPECIFICITY
-  // (HOTFIX: Domestic/Driving rules come FIRST, block higher tiers)
+  // 🧠 UNIVERSAL SEMANTIC CLASSIFIER (v3.0)
+  // ───────────────────────────────────────────────────────────────
+  // Tier metadata:
+  //   • compliance: routes with regulator-specific docs (Medical, Driver, Domestic)
+  //   • management : Tier 1 — Academic & Upper Management (مسار الأخصائيين والمدراء)
+  //   • supervisory: Tier 2 — Supervisory & Technical Operations (مسار المشرفين والفنيين)
+  //   • vocational : Tier 3 — Vocational / Trade / Labor (مسار العمالة الحرفية)
+  //
+  // Order is critical: longer/more-specific keywords are listed first within each
+  // rule, and rules are evaluated top-to-bottom. The matcher uses longest-token
+  // matching to ensure "رئيس قسم" hits Supervisor (Tier 2) BEFORE "رئيس" hits
+  // Management (Tier 1).
   // ═══════════════════════════════════════════════════════════════
   const RULES = [
-    // === HIGHEST PRIORITY: Domestic & Driving (block specialist/manager) ===
+    // ─── COMPLIANCE TIER (highest specificity — block generic fallback) ───
     {
-      id: 'domestic_female', template: 'domestic_female',
-      keywords: ['مربية', 'عاملة منزلية', 'خادمة', 'مدبرة منزل', 'مربيه', 'عامله منزليه']
+      id: 'domestic_female', template: 'domestic_female', tier: 'compliance',
+      keywords: ['مربية أطفال', 'مربيه اطفال', 'عاملة منزلية', 'عامله منزليه', 'خادمة منزل', 'مدبرة منزل', 'مربية', 'مربيه', 'خادمة', 'خادمه']
     },
     {
-      id: 'domestic_male', template: 'domestic_male',
-      keywords: ['عامل منزلي', 'خادم منزلي', 'عامل خدمة منزلية']
+      id: 'domestic_male', template: 'domestic_male', tier: 'compliance',
+      keywords: ['عامل خدمة منزلية', 'عامل منزلي', 'خادم منزلي']
     },
     {
-      id: 'driver', template: 'driver',
-      keywords: ['سائق', 'ساءق', 'سائق خاص', 'سائق عائلة', 'سائق سيارة']
+      id: 'driver', template: 'driver', tier: 'compliance',
+      keywords: ['سائق خاص', 'سائق عائلة', 'سائق سيارة', 'سائق شاحنة', 'سائق', 'ساءق']
     },
-    // Executive (top-tier) — HOTFIX: expanded
     {
-      id: 'executive', template: 'executive',
-      keywords: ['رئيس تنفيذي', 'ceo', 'cfo', 'cto', 'coo', 'مستثمر', 'مدير عام', 'مدير عمليات', 'رئيس مجلس', 'رئيس شركة', 'مدير شريك', 'شريك مؤسس', 'مؤسس']
+      id: 'medical', template: 'medical', tier: 'compliance',
+      keywords: [
+        'استشاري طبي', 'طبيب أسنان', 'طبيب اسنان', 'علاج طبيعي', 'فيزيائي علاجي',
+        'طبيب', 'طبيبه', 'طبيبة', 'دكتور صيدلي', 'دكتور صيدلانية',
+        'صيدلي', 'صيدلاني', 'صيدلانيه', 'صيدلانية',
+        'جراح', 'ممرض', 'ممرضه', 'ممرضة', 'مسعف', 'مختبري',
+        'فني مختبر طبي', 'فني أشعة', 'فني اشعة'
+      ]
     },
-    // Medical (HOTFIX: expanded with paramedic, dentist, nurse etc.)
+
+    // ─── TIER 2: SUPERVISORY & TECHNICAL OPERATIONS ───
+    // (Must come BEFORE Tier 1 so "رئيس قسم" beats "رئيس")
     {
-      id: 'medical', template: 'medical',
-      keywords: ['طبيب', 'طبيبه', 'طبيبة', 'دكتور', 'دكتوره', 'دكتورة', 'صيدلي', 'صيدلانيه', 'صيدلانية', 'صيدلاني', 'استشاري طبي', 'جراح', 'طبيب أسنان', 'ممرض', 'ممرضه', 'ممرضة', 'مسعف', 'فيزيائي علاجي', 'علاج طبيعي', 'مختبري']
+      id: 'supervisor', template: 'supervisor', tier: 'supervisory',
+      keywords: ['رئيس قسم', 'رئيس شيفت', 'مسؤول قسم', 'مشرف عام', 'مشرف إنتاج', 'مشرف انتاج', 'مشرف موقع', 'مشرف', 'مراقب جودة', 'مراقب', 'منسق', 'كبير']
     },
-    // Specialist (degree-required) — HOTFIX: expanded
     {
-      id: 'specialist', template: 'specialist',
-      keywords: ['أخصائي', 'اخصائي', 'أخصائيه', 'أخصائية', 'مستشار', 'مستشاره', 'مهندس', 'مهندسه', 'مهندسة', 'خبير', 'محلل', 'استشاري', 'باحث', 'محامي', 'مدقق حسابات', 'مصمم', 'مبرمج', 'مطور', 'معماري']
+      id: 'technical', template: 'technical', tier: 'supervisory',
+      keywords: [
+        'فني صيانة', 'فني تكييف', 'فني تبريد', 'فني', 'ميكانيكي', 'ميكانيكية',
+        'كهربائي', 'كهربائية', 'مهندس صيانة',
+        'حداد', 'نجار', 'سباك', 'صحي', 'لحام', 'مبرد', 'مكيف', 'صياغ',
+        'تركيب', 'صيانة', 'دهان', 'بلاط', 'مبلط', 'مصلح'
+      ]
     },
-    // Supervisor
+
+    // ─── TIER 1: ACADEMIC & UPPER MANAGEMENT ───
+    // (Executive subgroup uses commercial track / no military)
     {
-      id: 'supervisor', template: 'supervisor',
-      keywords: ['مشرف', 'رئيس قسم', 'مسؤول قسم', 'منسق', 'كبير']
+      id: 'executive', template: 'executive', tier: 'management',
+      keywords: [
+        'رئيس تنفيذي', 'رئيس مجلس إدارة', 'رئيس مجلس ادارة', 'رئيس مجلس',
+        'مدير عام', 'مدير عمليات', 'مدير شريك', 'شريك مؤسس', 'مؤسس',
+        'نائب رئيس تنفيذي', 'نائب مدير عام',
+        'ceo', 'cfo', 'cto', 'coo', 'مستثمر', 'رئيس شركة'
+      ]
     },
-    // Technical / Artisan (HOTFIX: expanded technical taxonomy)
     {
-      id: 'technical', template: 'technical',
-      keywords: ['فني', 'ميكانيكي', 'كهربائي', 'حداد', 'نجار', 'سباك', 'صحي', 'لحام', 'مبرد', 'مكيف', 'صياغ', 'تركيب', 'صيانة', 'دهان', 'بلاط', 'مبلط', 'مصلح']
+      id: 'specialist', template: 'specialist', tier: 'management',
+      keywords: [
+        'أخصائي', 'اخصائي', 'أخصائيه', 'أخصائية', 'اخصائية',
+        'مهندس', 'مهندسه', 'مهندسة',
+        'دكتور', 'دكتوره', 'دكتورة',
+        'مستشار', 'مستشاره', 'مستشارة',
+        'خبير', 'خبيره', 'خبيرة',
+        'محلل', 'محلله', 'محللة',
+        'باحث', 'باحثه', 'باحثة',
+        'محامي', 'محامية',
+        'مدقق حسابات', 'مدقق',
+        'مصمم', 'مصممة', 'مبرمج', 'مبرمجة', 'مطور', 'مطورة', 'معماري',
+        'نائب', 'مدير', 'مديره', 'مديرة',
+        'رئيس'  // ← Tier 1 default for "رئيس" alone (after "رئيس قسم" matched in Tier 2)
+      ]
     },
-    // Vocational / Labor (HOTFIX: expanded with طاهي/حلاق/بائع/خياط etc.)
+
+    // ─── TIER 3: VOCATIONAL / TRADE / LABOR ───
     {
-      id: 'labor', template: 'labor',
-      keywords: ['عامل', 'عاملة', 'معاون', 'مساعد', 'حمّال', 'حمال', 'منظف', 'منظفه', 'منظفة', 'حارس', 'بستاني', 'مزارع', 'سائس', 'راعي', 'طاهي', 'طبّاخ', 'طباخ', 'حلاق', 'بائع', 'بائعه', 'بائعة', 'خياط', 'خبّاز', 'خباز', 'جزار', 'كناس', 'ساعي', 'مراسل']
+      id: 'labor', template: 'labor', tier: 'vocational',
+      keywords: [
+        'عامل', 'عامله', 'عاملة', 'معاون', 'مساعد', 'مساعده', 'مساعدة',
+        'حمّال', 'حمال', 'منظف', 'منظفه', 'منظفة', 'حارس', 'حارسة',
+        'بستاني', 'بستانية', 'مزارع', 'مزارعة',
+        'سائس', 'راعي',
+        'طاهي', 'طاهية', 'طبّاخ', 'طباخ', 'طباخه', 'طباخة', 'كوك',
+        'حلاق', 'حلاقة',
+        'بائع', 'بائعه', 'بائعة', 'بائع متجول',
+        'خياط', 'خياطة',
+        'خبّاز', 'خباز', 'جزار', 'كناس', 'ساعي', 'مراسل'
+      ]
     },
-    // Admin (true office worker — last fallback before default labor)
+
+    // ─── OFFICE / ADMIN (Tier 1.5 — degreed but not specialist) ───
     {
-      id: 'admin', template: 'admin',
-      keywords: ['موظف', 'إداري', 'سكرتير', 'سكرتيره', 'سكرتيرة', 'محاسب', 'محاسبة', 'مدير', 'مدخل بيانات', 'كاتب', 'كاتبه']
+      id: 'admin', template: 'admin', tier: 'management',
+      keywords: ['موظف استقبال', 'موظف خدمة عملاء', 'موظف', 'إداري', 'اداري',
+                 'سكرتير', 'سكرتيره', 'سكرتيرة', 'سكرتاريا',
+                 'محاسب', 'محاسبه', 'محاسبة', 'مدخل بيانات', 'كاتب', 'كاتبه']
     }
   ];
 
+  // Tier display labels (for badge in modal)
+  const TIER_LABELS = {
+    compliance:  { label: 'مسار متخصص', color: 'gold' },
+    management:  { label: 'مسار الأخصائيين والمدراء', color: 'blue' },
+    supervisory: { label: 'مسار المشرفين والفنيين', color: 'green' },
+    vocational:  { label: 'مسار العمالة الحرفية', color: 'amber' },
+    fallback:    { label: 'المسار العام', color: 'gray' }
+  };
+
   function normalize(t) {
     if (!t) return '';
-    return String(t).trim().replace(/[أإآ]/g, 'ا').replace(/[ةه]/g, 'ه').replace(/ى/g, 'ي').toLowerCase();
+    return String(t)
+      .trim()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/[ةه]/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[ـ]/g, '')        // strip tatweel
+      .replace(/\s+/g, ' ')       // collapse whitespace
+      .toLowerCase();
   }
 
+  /**
+   * Universal Semantic Classifier — Longest-Prefix Match.
+   *
+   * Strategy: collect ALL keyword hits across all rules, then pick the rule
+   * whose matched keyword is LONGEST. This guarantees that:
+   *   - "رئيس قسم"     → Supervisor (Tier 2), NOT Specialist (Tier 1)
+   *   - "مدير عام"     → Executive (compliance), NOT Specialist
+   *   - "نائب رئيس"    → Specialist, NOT Executive (unless 'نائب رئيس تنفيذي')
+   *   - "عامل منزلي"   → Domestic Male, NOT Labor
+   *   - "طبيب أسنان"   → Medical, NOT Specialist
+   * If no keyword matches, returns the safe `general` template.
+   */
   function matchTemplate(userTitle) {
     const norm = normalize(userTitle);
-    if (!norm) return null;
+    if (!norm) return { id: 'general', template: 'general', tier: 'fallback', matched_keyword: null };
+
+    let best = null;
     for (const rule of RULES) {
       for (const kw of rule.keywords) {
-        if (norm.includes(normalize(kw))) {
-          return { ...rule, matched_keyword: kw };
+        const nkw = normalize(kw);
+        if (!nkw) continue;
+        // Word-boundary-aware contains: ensure keyword is a whole token or substring at token start.
+        // For Arabic, we accept any substring match but rank by length.
+        if (norm.includes(nkw)) {
+          if (!best || nkw.length > best._kwLen) {
+            best = { ...rule, matched_keyword: kw, _kwLen: nkw.length };
+          }
         }
       }
     }
-    // ⚠️ HOTFIX: any unmatched vocational query falls to LABOR (not specialist)
-    return { id: 'labor', template: 'labor', matched_keyword: 'default-vocational' };
+    if (best) {
+      delete best._kwLen;
+      return best;
+    }
+    // ✅ Universal Safe Fallback — NEVER a broken state
+    return { id: 'general', template: 'general', tier: 'fallback', matched_keyword: null };
   }
 
   // ═══════════════════════════════════════════════════════════════

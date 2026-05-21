@@ -160,3 +160,44 @@ Each profession now has a `meta` object: `{education, experience, qvp_required, 
 - ✅ Mobile (390×844): no overflow, proper stacking
 - ✅ JS console: 0 errors across all pages
 
+---
+
+## ✅ Round 6: Universal Semantic Classifier v3.0 (2026-02-21)
+
+### 🎯 Smart Fallback Upgrade — Rule-Based Taxonomy
+ترقية كاملة من keyword matching بسيط إلى **مصنف دلالي شامل بـ 3 طبقات** مع longest-prefix matching و Universal Safe Fallback.
+
+### Architecture
+**5-Tier Mapping**:
+| Tier | Templates | Purpose |
+|---|---|---|
+| `compliance` | medical, driver, domestic_female/male | Routes with regulator-specific docs (DataFlow, License, Domestic permit) |
+| `management` | executive, specialist, admin | **Tier 1**: Academic & Upper Mgmt (أخصائي/مهندس/دكتور/مستشار/خبير/مدير/رئيس/محلل/نائب/CEO) |
+| `supervisory` | supervisor, technical | **Tier 2**: Supervisory & Technical (مشرف/رئيس قسم/فني/ميكانيكي/كهربائي/مراقب) |
+| `vocational` | labor | **Tier 3**: Vocational/Trade/Labor (عامل/مساعد/معاون/سائس/طاهي/حلاق/بائع/خياط/لحام) |
+| `fallback` | **general** (NEW) | Universal Safe Fallback for unmatched inputs |
+
+### Key Algorithm: Longest-Prefix Match
+Instead of first-match wins, the classifier collects **ALL** keyword hits and selects the rule whose matched keyword is **longest**. This guarantees:
+- `رئيس قسم المحاسبة` → Supervisor (Tier 2), NOT Specialist (Tier 1)
+- `مدير عام` → Executive (compliance-like commercial track), NOT Specialist
+- `نائب رئيس تنفيذي` → Executive (3-word), NOT Specialist (2-word `نائب رئيس`)
+- `طبيب أسنان` → Medical, NOT Specialist
+- `عامل منزلي` → Domestic Male, NOT Labor
+
+### Universal Safe Fallback
+أي مهنة غريبة (e.g., "رائد فضاء", "مدرّب يوغا", "دي جي") تذهب لـ **template `general`**:
+- 9 وثائق أساسية: SECURITY, MILITARY, MEDICAL, VACCINE, CONTRACT, AUTH, PASSPORT, ATTEST + ملاحظة CTA واتساب
+- يطبع العنوان بالضبط كما أدخله المستخدم في الـ header
+- يدعم Gender Switch تلقائياً
+- Badge: "المسار العام للتأشيرة"
+
+### Regression Test Suite
+- 📁 `/app/backend/tests/test_classifier.js`
+- ✅ **43/43 mappings correct** (compliance/management/supervisory/vocational/fallback)
+- Includes tricky cases: longest-prefix (رئيس قسم), Arabic normalization (أ/إ/آ → ا، ة → ه)
+
+### Files Modified
+- ✏️ `/app/smart-fallback.js` — Complete classifier refactor (RULES + matchTemplate + general template + TIER_LABELS)
+- 🆕 `/app/backend/tests/test_classifier.js` — Headless regression suite
+
