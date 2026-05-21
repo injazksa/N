@@ -46,11 +46,11 @@
  if (window.CMS) {
  window.CMS.registerEventListener({
  name: 'preSave',
- handler: => {}
+ handler: () => {}
  });
  }
- window.addEventListener('load', => {
- setTimeout( => {
+ window.addEventListener('load', () => {
+ setTimeout(() => {
  const pl = document.getElementById('pre-loader');
  if (pl) pl.style.display = 'none';
  }, 1500);
@@ -60,7 +60,7 @@
  if (window.netlifyIdentity) {
  window.netlifyIdentity.on('init', user => {
  if (!user) {
- window.netlifyIdentity.on('login', => {
+ window.netlifyIdentity.on('login', () => {
  document.location.href = '/admin-secure/';
  });
  }

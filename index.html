@@ -4,8 +4,8 @@
  <!-- Google Analytics -->
  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4B2WJZ75XG"></script>
  <script>
- window.dataLayer = window.dataLayer | [];
- function gtag{dataLayer.push(arguments);}
+ window.dataLayer = window.dataLayer || [];
+ function gtag() {dataLayer.push(arguments);}
  gtag('js', new Date);
  gtag('config', 'G-4B2WJZ75XG');
  </script>
@@ -81,24 +81,6 @@
  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
  
  <!-- Tailwind CSS -->
- <script src="https://cdn.tailwindcss.com"></script>
- <script>
- tailwind.config = {
- theme: {
- extend: {
- colors: {
- 'navy': '#1B2A41',
- 'gold': '#C9A35E',
- 'gold-light': '#D4AF73',
- 'navy-dark': '#121C2B',
- },
- fontFamily: {
- 'arabic': ['Alexandria', 'Tajawal', 'sans-serif'],
- },
- }
- }
- }
- </script>
  
  <!-- Custom Styles -->
  
@@ -167,12 +149,12 @@
  
  <!-- 🔒 SECURITY: Disable Developer Tools & Code Extraction -->
  <script>
- (function {
+ (function() {
  'use strict';
  
  // Disable right-click
  document.addEventListener('contextmenu', function(e) {
- e.preventDefault;
+ e.preventDefault();
  return false;
  });
  
@@ -182,7 +164,7 @@
  (e.ctrlKey && e.shiftKey && e.keyCode == 73) | // Ctrl+Shift+I
  (e.ctrlKey && e.shiftKey && e.keyCode == 74) | // Ctrl+Shift+J
  (e.ctrlKey && e.keyCode == 85)) { // Ctrl+U
- e.preventDefault;
+ e.preventDefault();
  return false;
  }
  });
@@ -190,8 +172,8 @@
  // Detect DevTools opening
  let devtools = { open: false };
  const threshold = 160;
- const check = function {
- if (window.outerWidth - window.innerWidth > threshold | 
+ const check = function() {
+ if (window.outerWidth - window.innerWidth > threshold || 
  window.outerHeight - window.innerHeight > threshold) {
  if (!devtools.open) {
  devtools.open = true;
@@ -207,7 +189,7 @@
  if(!window.console) window.console = {};
  const methods = ["log", "debug", "warn", "info", "error"];
  for (let i = 0; i < methods.length; i++) {
- console[methods[i]] = function{};
+ console[methods[i]] = function(){};
  }
  });
  </script>
@@ -322,6 +304,9 @@
   ]
 }
     </script>
+    <!-- Tailwind (compiled, loaded last so utilities win cascade) -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
 </head>
 <body class="font-arabic bg-gray-50 text-slate-900">
  
@@ -1387,7 +1372,7 @@
  if (window.netlifyIdentity) {
  window.netlifyIdentity.on('init', (user) => {
  if (!user) {
- window.netlifyIdentity.on('login', => {
+ window.netlifyIdentity.on('login', () => {
  document.location.href = '/admin-secure/';
  });
  }

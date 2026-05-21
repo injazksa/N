@@ -1,10 +1,11 @@
 # PRD — saudia-visa.com Complete Overhaul (Tasks 1-12)
 
 ## Architecture
-- **Frontend**: HTML5 + Tailwind CDN + Vanilla JS (static, Netlify-hosted)
+- **Frontend**: HTML5 + **Tailwind compiled locally (91KB)** + Vanilla JS (static, Netlify-hosted)
 - **Analytics**: Facebook Pixel (2499298600459646) + GA4
 - **Logo**: Transparent PNG/SVG (سيف + نخلة, نيلي/ذهبي)
-- **Professions DB**: 269 مهنة بأكواد رسمية + Smart Fallback unlimited
+- **Professions DB**: 273 مهنة بأكواد رسمية + Smart Fallback unlimited
+- **Programmatic SEO**: 273 landing pages في `/p/` (واحدة لكل مهنة)
 
 ## Completed (2026-01)
 
@@ -113,4 +114,49 @@ Each profession now has a `meta` object: `{education, experience, qvp_required, 
 - OG image 1200×630 مخصص
 - Custom Audience من Smart Fallback users (high-intent leads)
 - Multi-language support (English/Urdu) للمسميات
+
+---
+
+## ✅ Round 5: Phase 6 Performance + Bug Fixes (2026-02-21)
+
+### 🐛 Critical Bug Fix — Smart Fallback Broken
+**السبب الجذري**: أخطاء نحوية واسعة في JavaScript منعت تشغيل المودال:
+- `schema-markup.js`: 3 دوال بدون أقواس (`function init {`, `function generateBreadcrumbs {`)
+- `index.html`: 6 أخطاء (IIFE، `function gtag{`, `e.preventDefault;`, `| []` بدل `||`، `function {}`)
+- `calculator.html`: 10 أخطاء (دوال بدون أقواس، arrow بدون args)
+- `admin-secure/index.html`: 3 أخطاء (arrow handlers، load listener)
+
+**الحل**: سكربت `fix_js_syntax.py` يصلّح 19 خطأ + إصلاح يدوي إضافي. **الآن: 0 أخطاء JS**
+
+### ⚡ Phase 6: Speed Optimization (Done)
+1. **Tailwind CDN → Compiled CSS**:
+   - بناء `/app/css/tailwind.min.css` (91KB minified, JIT scanner للـ 296 صفحة)
+   - حذف `<script src="cdn.tailwindcss.com">` من 296 صفحة HTML
+   - تكوين مخصص `tailwind.config.js` مع safelist للكلاسات الديناميكية
+   - **مكسب**: ~5MB JIT engine → 91KB cached CSS، صفر runtime overhead
+2. **CSS Cascade Fix**: تحريك `tailwind.min.css` لآخر `<head>` (يطابق سلوك CDN) لمنع تجاوز `styles.css` لكلاسات Tailwind
+3. **JS Defer**: إضافة `defer` لـ `script.js` و `professions.js` في `professions.html`
+4. **DNS Cleanup**: حذف `dns-prefetch` للـ CDN المُلغى من 15 ملف
+
+### Files Modified/Created
+- ✏️ 296 ملف HTML (إزالة CDN، إضافة local CSS، إعادة ترتيب)
+- ✏️ `/app/schema-markup.js` (إصلاح syntax)
+- ✏️ `/app/professions.html` (defer scripts)
+- ✏️ `/app/index.html`, `/app/calculator.html`, `/app/admin-secure/index.html` (syntax fixes)
+- 🆕 `/app/css/tailwind.min.css` (91KB compiled)
+- 🆕 `/app/css/tailwind-input.css`
+- 🆕 `/app/tailwind.config.js`
+- 🆕 `/app/scripts/replace_tailwind_cdn.py`
+- 🆕 `/app/scripts/reorder_tailwind.py`
+- 🆕 `/app/scripts/fix_js_syntax.py`
+
+### Verification (2026-02-21)
+- ✅ Homepage: navy gradient + visa BG + centered hero + stats grid
+- ✅ `/professions.html`: Smart Fallback modal opens, all categories detected
+- ✅ Driver test (`سائق خاص`) → renders driver track + license docs
+- ✅ Medical test (`طبيب أسنان عام`) → renders medical track + DataFlow + ممارس بلس
+- ✅ Gender switch toggles correctly
+- ✅ Programmatic SEO page (`/p/رئيس-تنفيذي-112001.html`) renders perfectly
+- ✅ Mobile (390×844): no overflow, proper stacking
+- ✅ JS console: 0 errors across all pages
 

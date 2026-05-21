@@ -21,7 +21,6 @@
  <meta property="og:image:height" content="630">
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
  <meta name="description" content="دليل شامل لتأشيرة العمل السعودية من الأردن: الشروط، الأوراق، الرسوم الحكومية، مدة الإنجاز 5-7 أيام. مكتب معتمد.">
  <!-- ✅ Google Search Console: استبدل XXXX برمز التحقق من لوحة GSC -->
@@ -34,17 +33,6 @@
  <script src="schema-markup.js" defer></script>
  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
- <script src="https://cdn.tailwindcss.com"></script>
- <script>
- tailwind.config = {
- theme: {
- extend: {
- colors: { 'navy': '#1B2A41', 'gold': '#C9A35E', 'gold-light': '#D4AF73', 'navy-dark': '#121C2B' },
- fontFamily: { 'arabic': ['Alexandria', 'Tajawal', 'sans-serif'] }
- }
- }
- }
- </script>
  
  <!-- ⚡ Performance: preload critical resources -->
  <link rel="preload" href="/styles.css" as="style">
@@ -98,6 +86,9 @@
   ]
 }
     </script>
+    <!-- Tailwind (compiled, loaded last so utilities win cascade) -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
 </head>
 <body class="font-arabic bg-gray-50">
  

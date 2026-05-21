@@ -24,8 +24,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { theme: { extend: { colors: { navy: '#1B2A41', gold: '#C9A35E' }, fontFamily: { arabic: ['Alexandria','Tajawal','sans-serif'] } } } }</script>
 
     <script src="/marketing-pixel.js" defer></script>
 
@@ -58,6 +56,9 @@
       ]
     }
     </script>
+    <!-- Tailwind (compiled, loaded last so utilities win cascade) -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
 </head>
 <body class="bg-gray-50 font-arabic">
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b shadow-sm">

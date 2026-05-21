@@ -28,21 +28,10 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="canonical" href="https://saudia-visa.com/blog-post.html">
     <!-- ✅ Google Search Console: استبدل XXXX برمز التحقق من لوحة GSC -->
     <meta name="google-site-verification" content="REPLACE_WITH_GSC_CODE">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: {
-                colors: { 'navy': '#1B2A41', 'gold': '#C9A35E' },
-                fontFamily: { 'arabic': ['Alexandria','Tajawal','sans-serif'] }
-            }}
-        }
-    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
@@ -76,6 +65,9 @@
     <!-- 📊 Facebook Pixel + WhatsApp/Phone/Email click tracking -->
     <script src="/marketing-pixel.js" defer></script>
     <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2499298600459646&ev=PageView&noscript=1"/></noscript>
+    <!-- Tailwind (compiled, loaded last so utilities win cascade) -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
 
 </head>
 <body class="bg-gray-50 font-arabic">

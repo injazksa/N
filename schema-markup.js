@@ -12,7 +12,7 @@
  * - ✅ إضافة FAQPage schema عند وجود [data-faq]
  */
 
-(function {
+(function() {
  'use strict';
 
  const BUSINESS = {
@@ -160,7 +160,7 @@
  };
 
  // ─── BreadcrumbList تلقائي ───
- function generateBreadcrumbs {
+ function generateBreadcrumbs() {
  const path = location.pathname.replace(/\.html$/, '').replace(/^\//, '');
  if (!path | path === 'index') return null;
 
@@ -216,7 +216,7 @@
  document.head.appendChild(s);
  }
 
- function init {
+ function init() {
  inject(localBusiness);
  inject(organization);
  inject(website);

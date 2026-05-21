@@ -43,24 +43,6 @@
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
  
  <!-- Tailwind CSS -->
- <script src="https://cdn.tailwindcss.com"></script>
- <script>
- tailwind.config = {
- theme: {
- extend: {
- colors: {
- 'navy': '#1B2A41',
- 'gold': '#C9A35E',
- 'gold-light': '#D4AF73',
- 'navy-dark': '#121C2B',
- },
- fontFamily: {
- 'arabic': ['Alexandria', 'Tajawal', 'sans-serif'],
- },
- }
- }
- }
- </script>
  
  <!-- Custom Styles -->
  
@@ -197,6 +179,9 @@
     }
   }
 </style>
+    <!-- Tailwind (compiled, loaded last so utilities win cascade) -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
 </head>
 <body class="font-arabic bg-gray-50 text-slate-900">
  
@@ -484,8 +469,8 @@
  </div>
  </footer>
  
- <script src="script.js"></script>
- <script src="professions.js"></script>
+ <script src="script.js" defer></script>
+ <script src="professions.js" defer></script>
  <!-- 🧠 Smart Fallback System (Task 12) — يولّد أوراق المهن المفقودة تلقائياً -->
  <script src="/smart-fallback.js" defer></script>
 

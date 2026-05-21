@@ -13,7 +13,6 @@
  <title>الفحص المهني QVP | حجز امتحان السعودية الأردن</title>
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
  <meta name="description" content="الفحص المهني للعمالة (QVP) للعمل في السعودية — 25-30 سؤال اختيار متعدد. حجز مواعيد لمهن البناء، الطهي، الميكانيك..">
  <!-- ✅ Google Search Console: استبدل XXXX برمز التحقق من لوحة GSC -->
@@ -38,16 +37,6 @@
  <meta name="twitter:card" content="summary_large_image">
  <meta name="twitter:title" content="الفحص المهني للعمالة (QVP) — الأردن للسعودية">
  <meta name="twitter:description" content="امتحان نظري 25-30 سؤال · ناجح أو راسب · خدمة حجز المواعيد عبر مكتبنا.">
-
- <script src="https://cdn.tailwindcss.com"></script>
- <script>
- tailwind.config = {
- theme: { extend: {
- colors: { 'navy': '#1B2A41', 'navy-dark': '#0F1922', 'gold': '#C9A35E', 'gold-light': '#D4AF73' },
- fontFamily: { 'arabic': ['Alexandria','Tajawal','sans-serif'] }
- }}
- }
- </script>
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
  
  <!-- ⚡ Performance: preload critical resources -->
@@ -142,6 +131,9 @@
     <!-- 📊 Facebook Pixel + WhatsApp/Phone/Email click tracking -->
     <script src="/marketing-pixel.js" defer></script>
     <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2499298600459646&ev=PageView&noscript=1"/></noscript>
+    <!-- Tailwind (compiled, loaded last so utilities win cascade) -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
 
 </head>
 <body class="bg-gray-50 font-arabic">

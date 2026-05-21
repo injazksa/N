@@ -23,7 +23,6 @@
  <meta property="og:image:height" content="630">
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
  <meta name="description" content="احسب تكلفة تأشيرتك السعودية: عمل، إقامة، زيارة، عمرة. تشمل الرسوم الحكومية والفحص الطبي والاعتماد المهني — مكتب معتمد.">
  <!-- ✅ Google Search Console: استبدل XXXX برمز التحقق من لوحة GSC -->
@@ -36,22 +35,6 @@
  <script src="schema-markup.js" defer></script>
  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
- <script src="https://cdn.tailwindcss.com"></script>
- <script>
- tailwind.config = {
- theme: {
- extend: {
- colors: {
- 'navy': '#1B2A41',
- 'gold': '#C9A35E',
- 'gold-light': '#D4AF73',
- 'navy-dark': '#121C2B',
- },
- fontFamily: { 'arabic': ['Alexandria', 'Tajawal', 'sans-serif'] }
- }
- }
- }
- </script>
  
  <!-- ⚡ Performance: preload critical resources -->
  <link rel="preload" href="/styles.css" as="style">
@@ -73,6 +56,9 @@
     <!-- 📊 Facebook Pixel + WhatsApp/Phone/Email click tracking -->
     <script src="/marketing-pixel.js" defer></script>
     <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2499298600459646&ev=PageView&noscript=1"/></noscript>
+    <!-- Tailwind (compiled, loaded last so utilities win cascade) -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
 
 </head>
 <body class="font-arabic bg-gray-50">
@@ -321,7 +307,7 @@
  
  <script>
  // Handle visa type change
- function handleVisaTypeChange {
+ function handleVisaTypeChange() {
  const visaType = document.getElementById('visaType').value;
  const professionSection = document.getElementById('professionSection');
  const servicesSection = document.getElementById('servicesSection');
@@ -339,7 +325,7 @@
  }
  
  // Handle profession change
- function handleProfessionChange {
+ function handleProfessionChange() {
  const profession = document.getElementById('professionCategory').value;
  const experienceSection = document.getElementById('experienceSection');
  const certLabel = document.getElementById('certificationLabel');
@@ -375,7 +361,7 @@
  }
  
  // Handle visa only checkbox
- function handleVisaOnlyChange {
+ function handleVisaOnlyChange() {
  const visaOnly = document.getElementById('visaOnly').checked;
  
  if (visaOnly) {
@@ -393,7 +379,7 @@
  }
  }
  
- function calculateCost {
+ function calculateCost() {
  const visaType = document.getElementById('visaType').value;
  const profession = document.getElementById('professionCategory').value;
  const experience = document.getElementById('experienceLevel').value;
@@ -569,7 +555,7 @@
  
  // Sync segmented radios <-> hidden experience select
  document.querySelectorAll('input[name="experienceLevelSeg"]').forEach(radio => {
- radio.addEventListener('change', => {
+ radio.addEventListener('change', () => {
  const hidden = document.getElementById('experienceLevel');
  if (hidden) hidden.value = radio.value;
  });
@@ -578,7 +564,7 @@
  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  // 📤 SHARE SHEET
  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- function buildShareText {
+ function buildShareText() {
  const visaType = document.getElementById('visaType').value;
  const totalRange = document.getElementById('totalRange').textContent.trim;
  const breakdownItems = Array.from(
@@ -603,7 +589,7 @@
  return lines.join('\n');
  }
 
- function openShareSheet {
+ function openShareSheet() {
  const text = buildShareText;
  const url = 'https://saudia-visa.com/calculator.html';
  const encoded = encodeURIComponent(text);
@@ -628,7 +614,7 @@
  document.body.style.overflow = 'hidden';
  }
 
- function closeShareSheet {
+ function closeShareSheet() {
  document.getElementById('shareSheetBackdrop').classList.remove('is-open');
  document.getElementById('shareSheet').classList.remove('is-open');
  document.body.style.overflow = '';
@@ -639,10 +625,10 @@
  document.getElementById('calcToastText').textContent = msg;
  toast.classList.add('is-show');
  clearTimeout(window._calcToastTimer);
- window._calcToastTimer = setTimeout( => toast.classList.remove('is-show'), 2200);
+ window._calcToastTimer = setTimeout(() => toast.classList.remove('is-show'), 2200);
  }
 
- async function copyShareText {
+ async function copyShareText() {
  const text = buildShareText;
  try {
  await navigator.clipboard.writeText(text);
@@ -659,7 +645,7 @@
  }
  }
 
- async function nativeShare {
+ async function nativeShare() {
  if (!navigator.share) return;
  try {
  await navigator.share({
