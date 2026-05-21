@@ -1,0 +1,284 @@
+# ═══════════════════════════════════════════════════════════════════
+# Decap CMS — مكتب تأشيرات السعودية 
+# لوحة تحكم شاملة — تعديل كل محتوى الموقع من Netlify
+# ═══════════════════════════════════════════════════════════════════
+
+backend:
+ name: git-gateway
+ branch: main
+ commit_messages:
+ create: 'إنشاء "{{slug}}" في {{collection}}'
+ update: 'تحديث "{{slug}}" في {{collection}}'
+ delete: 'حذف "{{slug}}" من {{collection}}'
+ uploadMedia: 'رفع "{{path}}"'
+ deleteMedia: 'حذف "{{path}}"'
+
+locale: 'ar'
+media_folder: 'images/uploads'
+public_folder: '/images/uploads'
+publish_mode: editorial_workflow
+site_url: 'https://saudia-visa.com'
+display_url: 'https://saudia-visa.com'
+logo_url: '/icons/logo-192.png'
+
+collections:
+
+ # ══════════════════════════════════════════════════════════════
+ # 1. ⚙️ إعدادات الموقع العامة
+ # ══════════════════════════════════════════════════════════════
+ - name: 'settings'
+ label: '⚙️ إعدادات الموقع'
+ editor: { preview: false }
+ files:
+
+ - name: 'contact'
+ label: '📞 معلومات الاتصال والدوام'
+ file: 'content/settings.json'
+ fields:
+ - { name: phone, label: 'رقم الهاتف (للاتصال)', widget: string }
+ - { name: phone_display, label: 'الهاتف كما يظهر للزائر', widget: string }
+ - { name: whatsapp, label: 'رقم واتساب (بدون +)', widget: string }
+ - { name: whatsapp_business_link, label: 'رابط WhatsApp Business', widget: string, required: false }
+ - { name: email, label: 'البريد الإلكتروني', widget: string }
+ - { name: address, label: 'العنوان الكامل', widget: string }
+ - { name: address_short, label: 'العنوان المختصر', widget: string }
+ - { name: license, label: 'رقم الترخيص', widget: string }
+ - name: hours
+ label: 'ساعات الدوام'
+ widget: object
+ fields:
+ - { name: days_arabic, label: 'الأيام (عربي)', widget: string }
+ - { name: opens, label: 'وقت الفتح (24h)', widget: string }
+ - { name: closes, label: 'وقت الإغلاق (24h)',widget: string }
+ - { name: closed_days, label: 'أيام الإغلاق', widget: string }
+ - name: ticker_items
+ label: 'رسائل الشريط الإخباري'
+ widget: list
+ summary: '{{fields.text}}'
+ field: { name: text, label: 'الرسالة', widget: string }
+ - name: stats
+ label: 'الإحصائيات (الأرقام الظاهرة)'
+ widget: object
+ fields:
+ - { name: years_experience, label: 'سنوات الخبرة', widget: number, value_type: int }
+ - { name: happy_clients, label: 'عدد العملاء', widget: number, value_type: int }
+ - { name: professions, label: 'عدد المهن', widget: number, value_type: int }
+ - name: social
+ label: 'وسائل التواصل الاجتماعي'
+ widget: object
+ fields:
+ - { name: facebook, label: 'رابط فيسبوك', widget: string, required: false }
+ - { name: instagram, label: 'رابط إنستغرام', widget: string, required: false }
+ - { name: twitter, label: 'رابط X / تويتر', widget: string, required: false }
+
+ # ══════════════════════════════════════════════════════════════
+ # 2. 🏠 الصفحة الرئيسية
+ # ══════════════════════════════════════════════════════════════
+ - name: 'homepage'
+ label: '🏠 الصفحة الرئيسية'
+ editor: { preview: false }
+ files:
+
+ - name: 'hero'
+ label: '🎯 قسم Hero (الرأس الرئيسي)'
+ file: 'content/homepage.json'
+ fields:
+ - { name: hero_badge, label: 'الشارة الصغيرة فوق العنوان', widget: string }
+ - { name: hero_title_1, label: 'العنوان — الجزء 1 (navy)', widget: string }
+ - { name: hero_title_2, label: 'العنوان — الجزء 2 (gold)', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - { name: hero_cta_primary, label: 'نص الزر الأول', widget: string }
+ - { name: hero_cta_secondary, label: 'نص الزر الثاني', widget: string, required: false }
+
+ # ══════════════════════════════════════════════════════════════
+ # 3. 🛂 صفحات الخدمات — تعديل المحتوى والأسعار والمتطلبات
+ # ══════════════════════════════════════════════════════════════
+ - name: 'services'
+ label: '🛂 صفحات الخدمات'
+ editor: { preview: false }
+ files:
+
+ - name: 'work_visa'
+ label: '✈️ تأشيرة العمل'
+ file: 'content/services/work-visa.json'
+ fields:
+ - { name: hero_title, label: 'عنوان الصفحة', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - { name: processing_time, label: 'مدة الإنجاز', widget: string }
+ - { name: price_range, label: 'نطاق الأسعار', widget: string }
+ - { name: important_note, label: 'ملاحظة مهمة', widget: text, required: false }
+ - name: requirements
+ label: 'الوثائق المطلوبة'
+ widget: list
+ field: { name: item, label: 'وثيقة', widget: string }
+
+ - name: 'professional'
+ label: '🏅 الاعتماد المهني QVP'
+ file: 'content/services/professional.json'
+ fields:
+ - { name: hero_title, label: 'عنوان الصفحة', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - { name: processing_time, label: 'مدة الإنجاز', widget: string }
+ - { name: price_range, label: 'نطاق الأسعار', widget: string }
+ - { name: important_note, label: 'ملاحظة مهمة', widget: text, required: false }
+ - name: requirements
+ label: 'الوثائق المطلوبة'
+ widget: list
+ field: { name: item, label: 'وثيقة', widget: string }
+
+ - name: 'certificates'
+ label: '📜 تصديق الشهادات'
+ file: 'content/services/certificates.json'
+ fields:
+ - { name: hero_title, label: 'عنوان الصفحة', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - { name: processing_time, label: 'مدة الإنجاز', widget: string }
+ - { name: price_range, label: 'نطاق الأسعار', widget: string }
+ - { name: important_note, label: 'ملاحظة مهمة', widget: text, required: false }
+ - name: requirements
+ label: 'الوثائق المطلوبة'
+ widget: list
+ field: { name: item, label: 'وثيقة', widget: string }
+
+ - name: 'corporate'
+ label: '🏢 خدمات الشركات'
+ file: 'content/services/corporate.json'
+ fields:
+ - { name: hero_title, label: 'عنوان الصفحة', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - { name: processing_time, label: 'مدة الإنجاز', widget: string }
+ - { name: price_range, label: 'نطاق الأسعار', widget: string }
+ - { name: important_note, label: 'ملاحظة مهمة', widget: text, required: false }
+ - name: requirements
+ label: 'المستندات المطلوبة'
+ widget: list
+ field: { name: item, label: 'مستند', widget: string }
+
+ - name: 'other_services'
+ label: '➕ الخدمات الأخرى'
+ file: 'content/services/other-services.json'
+ fields:
+ - { name: hero_title, label: 'عنوان الصفحة', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - name: services_list
+ label: 'قائمة الخدمات'
+ widget: list
+ summary: '{{fields.name}}'
+ fields:
+ - { name: name, label: 'اسم الخدمة', widget: string }
+ - { name: desc, label: 'الوصف', widget: text }
+ - { name: price, label: 'السعر', widget: string }
+
+ - name: 'calculator'
+ label: '🧮 حاسبة التأشيرة'
+ file: 'content/services/calculator.json'
+ fields:
+ - { name: hero_title, label: 'عنوان الصفحة', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - { name: note, label: 'ملاحظة المستخدم', widget: text, required: false }
+ - name: fees
+ label: 'الرسوم الأساسية (بالدينار)'
+ widget: object
+ fields:
+ - { name: work_visa_base, label: 'رسوم التأشيرة الأساسية', widget: number, value_type: float }
+ - { name: medical_exam, label: 'الفحص الطبي', widget: number, value_type: float }
+ - { name: attestation, label: 'تصديق الشهادات', widget: number, value_type: float }
+ - { name: qvp, label: 'الاعتماد المهني QVP', widget: number, value_type: float }
+ - { name: urgent_fee, label: 'رسوم الاستعجال', widget: number, value_type: float }
+
+ # ══════════════════════════════════════════════════════════════
+ # 4. 📝 مقالات المدونة
+ # ══════════════════════════════════════════════════════════════
+ - name: 'blog'
+ label: '📝 مقالات المدونة'
+ folder: 'content/blog'
+ create: true
+ slug: '{{slug}}'
+ preview_path: 'blog-post.html?slug={{slug}}'
+ editor: { preview: false }
+ fields:
+ - { name: title, label: 'عنوان المقال', widget: string }
+ - { name: summary, label: 'ملخص قصير للبطاقة', widget: text }
+ - { name: date, label: 'تاريخ النشر', widget: datetime, format: 'YYYY-MM-DD' }
+ - { name: author, label: 'الكاتب', widget: string, default: 'فريق المكتب' }
+ - { name: category, label: 'التصنيف', widget: select,
+ options: ['تأشيرة العمل','العمرة والحج','التصديقات','الاعتماد المهني QVP','تأشيرة السياحة','العائلة والاستقدام','نصائح عامة'] }
+ - { name: cover, label: 'صورة الغلاف', widget: image, required: false }
+ - { name: cover_alt, label: 'وصف الصورة (لـ Google)', widget: string, required: false }
+ - { name: read_time, label: 'مدة القراءة (دقائق)', widget: number, value_type: int, default: 5 }
+ - { name: featured, label: 'مقال مميَّز في الرئيسية؟', widget: boolean, default: false }
+ - { name: meta_description, label: 'وصف SEO (Google)', widget: text, required: false, hint: 'أقل من 160 حرف' }
+ - { name: meta_keywords, label: 'كلمات مفتاحية SEO', widget: string, required: false }
+ - { name: body, label: 'محتوى المقال (Markdown)', widget: markdown }
+
+ # ══════════════════════════════════════════════════════════════
+ # 5. ❓ الأسئلة الشائعة
+ # ══════════════════════════════════════════════════════════════
+ - name: 'faq'
+ label: '❓ الأسئلة الشائعة'
+ editor: { preview: false }
+ files:
+ - name: 'faq_content'
+ label: 'قائمة الأسئلة والأجوبة'
+ file: 'content/services/faq.json'
+ fields:
+ - { name: hero_title, label: 'عنوان الصفحة', widget: string }
+ - { name: hero_subtitle, label: 'النص التعريفي', widget: text }
+ - name: faqs
+ label: 'الأسئلة والأجوبة'
+ widget: list
+ summary: '{{fields.q}}'
+ fields:
+ - { name: q, label: 'السؤال', widget: string }
+ - { name: a, label: 'الجواب', widget: text }
+
+ # ══════════════════════════════════════════════════════════════
+ # 6. ⭐ آراء العملاء
+ # ══════════════════════════════════════════════════════════════
+ - name: 'testimonials'
+ label: '⭐ آراء العملاء'
+ folder: 'content/testimonials'
+ create: true
+ delete: true
+ slug: '{{slug}}'
+ editor: { preview: false }
+ fields:
+ - { name: name, label: 'اسم العميل', widget: string }
+ - { name: profession, label: 'المهنة / الدور', widget: string, required: false }
+ - { name: rating, label: 'التقييم (1-5)', widget: number, value_type: int, default: 5, min: 1, max: 5 }
+ - { name: message, label: 'نص الرأي', widget: text }
+ - { name: date, label: 'التاريخ', widget: datetime, format: 'YYYY-MM-DD' }
+ - { name: published, label: 'نشر الرأي؟', widget: boolean, default: true }
+
+ # ══════════════════════════════════════════════════════════════
+ # 7. 🔍 SEO — عناوين وأوصاف جميع الصفحات
+ # ══════════════════════════════════════════════════════════════
+ - name: 'seo'
+ label: '🔍 SEO الصفحات'
+ editor: { preview: false }
+ files:
+ - name: 'pages_seo'
+ label: 'SEO جميع الصفحات'
+ file: 'content/seo.json'
+ fields:
+ - name: pages
+ label: 'الصفحات'
+ widget: list
+ summary: '{{fields.page}} — {{fields.title}}'
+ fields:
+ - { name: page, label: 'اسم الصفحة', widget: string, hint: 'مثال: index.html' }
+ - { name: title, label: 'العنوان (أقل 60 حرف)', widget: string }
+ - { name: description, label: 'الوصف (أقل 160 حرف)', widget: text }
+ - { name: keywords, label: 'كلمات مفتاحية', widget: string, required: false }
+
+ # ══════════════════════════════════════════════════════════════
+ # 8. 🖼️ الصور والوسائط
+ # ══════════════════════════════════════════════════════════════
+ - name: 'media_pages'
+ label: '🖼️ رفع صور جديدة'
+ folder: 'images/uploads'
+ create: true
+ editor: { preview: false }
+ fields:
+ - { name: title, label: 'وصف الصورة (للبحث)', widget: string }
+ - { name: file, label: 'الصورة', widget: image }

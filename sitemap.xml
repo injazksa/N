@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+ xmlns:xhtml="http://www.w3.org/1999/xhtml"
+ xmlns:image="http://www.google.com/schemas/sitemap-image/0.9">
+
+ <!-- ✅ Sitemap v4.0 — 2026-05-07 | مكتب تأشيرات السعودية | 20 صفحة -->
+
+ <!-- ════ الصفحة الرئيسية ════ -->
+ <url>
+ <loc>https://saudia-visa.com/</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>weekly</changefreq>
+ <priority>1.0</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/1000136638.webp</image:loc>
+ <image:title>مكتب تأشيرات السعودية المعتمد في الأردن </image:title>
+ </image:image>
+ </url>
+
+ <!-- ════ صفحات الخدمات الرئيسية ════ -->
+ <url>
+ <loc>https://saudia-visa.com/work-visa.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.95</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-work-visa-hero.webp</image:loc>
+ <image:title>تأشيرة العمل السعودية من الأردن</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/professional.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.95</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-qvp-hero.webp</image:loc>
+ <image:title>الاعتماد المهني QVP — إنجاز السعودية</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/professions.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>weekly</changefreq>
+ <priority>0.95</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-top-professions-hero.webp</image:loc>
+ <image:title>761 مهنة معتمدة — أوراق التأشيرة السعودية</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/certificates.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.9</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-certificates-hero.webp</image:loc>
+ <image:title>تصديق الشهادات من السفارة السعودية</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/saudi-labor-exam-jordan.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.9</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-qvp-hero.webp</image:loc>
+ <image:title>الفحص المهني QVP — حجز امتحان العمالة الأردن</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/calculator.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.85</priority>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/corporate.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.85</priority>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/other-services.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.8</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/other-services-hero.webp</image:loc>
+ <image:title>خدمات أخرى — مكتب تأشيرات السعودية</image:title>
+ </image:image>
+ </url>
+
+ <!-- ════ صفحات دعم ════ -->
+ <url>
+ <loc>https://saudia-visa.com/about.html</loc>
+ <lastmod>2026-05-01</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.85</priority>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/faq.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.8</priority>
+ </url>
+
+ <!-- ════ المدونة ════ -->
+ <url>
+ <loc>https://saudia-visa.com/blog.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>weekly</changefreq>
+ <priority>0.9</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-work-visa-hero.webp</image:loc>
+ <image:title>مدونة تأشيرات السعودية</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/blog/work-visa-comprehensive-2026.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.9</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-work-visa-hero.webp</image:loc>
+ <image:title>تأشيرة العمل السعودية 2026 — الدليل الشامل</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/blog/umrah-visa-guide-2026.html</loc>
+ <lastmod>2026-04-21</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.9</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-umrah-hero.webp</image:loc>
+ <image:title>دليل تأشيرة العمرة الشامل 2026</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/blog/family-sponsorship-guide.html</loc>
+ <lastmod>2026-04-21</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.9</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-family-visa-hero.webp</image:loc>
+ <image:title>الاستقدام العائلي للسعودية 2026</image:title>
+ </image:image>
+ </url>
+
+ <url>
+ <loc>https://saudia-visa.com/blog/tourist-visa-guide.html</loc>
+ <lastmod>2026-05-01</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.9</priority>
+ <image:image>
+ <image:loc>https://saudia-visa.com/images/blog-tourist-visa-hero.webp</image:loc>
+ <image:title>التأشيرة السياحية للسعودية 2026</image:title>
+ </image:image>
+ </url>
+
+ <!-- ════ صفحات قانونية: محذوفة من Sitemap (noindex) ════ -->
+
+ <url>
+ <loc>https://saudia-visa.com/blog-post.html</loc>
+ <lastmod>2026-05-07</lastmod>
+ <changefreq>weekly</changefreq>
+ <priority>0.7</priority>
+ </url>
+
+</urlset>
