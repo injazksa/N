@@ -607,3 +607,7 @@ function debounce(func, wait) {
  timeout = setTimeout(later, wait);
  };
 }
+
+
+// Expose printProfessionDocument globally for Smart Fallback System (Task 12)
+window.printProfessionDocument = printProfessionDocument;

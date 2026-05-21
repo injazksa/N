@@ -1,88 +1,116 @@
-# PRD — saudia-visa.com Complete Overhaul (Tasks 1-11 + Integration Round)
-
-## Original Problem Statement
-موقع HTML/CSS/JS ثابت لمكتب تأشيرات السعودية في الأردن (Netlify-hosted).
-3 جولات تحسينات: SEO/Branding + قاعدة بيانات المهن + التكامل البرمجي مع الأنظمة الحالية.
+# PRD — saudia-visa.com Complete Overhaul (Tasks 1-12)
 
 ## Architecture
-- **Frontend**: HTML5 / Tailwind CDN / Vanilla JS (static)
-- **Hosting**: Netlify
-- **Analytics**: Facebook Pixel (2499298600459646) + GA4 (G-4B2WJZ75XG)
-- **Logo**: Transparent PNG/SVG (السيف والنخلة - نيلي/ذهبي)
+- **Frontend**: HTML5 + Tailwind CDN + Vanilla JS (static, Netlify-hosted)
+- **Analytics**: Facebook Pixel (2499298600459646) + GA4
+- **Logo**: Transparent PNG/SVG (سيف + نخلة, نيلي/ذهبي)
+- **Professions DB**: 269 مهنة بأكواد رسمية + Smart Fallback unlimited
 
 ## Completed (2026-01)
 
-### ✅ Round 1: Tasks 1-9 (SEO + Branding)
-- حذف 141 إشارة لرقم 22128 + إعادة تسمية admin folder
+### ✅ Round 1: SEO + Branding (Tasks 1-9)
+- حذف 141 إشارة للرقم 22128 من 31 ملف
 - 17 صفحة بـ H1 واحد + 3 صفحات قانونية noindex
-- blog-post.html غني (307 كلمة) + internal links
+- blog-post.html (~307 كلمة + internal links)
 - Single-step redirects (HTTPS + Non-WWW)
 - Favicon + OG + Schema.org cleanup
 
-### ✅ Round 2: Tasks 10-11 (Pixel + Logo + Database)
+### ✅ Round 2: Pixel + Logo (Task 11)
 - Facebook Pixel + WhatsApp/Phone/Email tracking على 21 صفحة
-- الأيقونة الجديدة بخلفية شفافة (PNG RGBA) — 5 أحجام + favicon.ico + favicon.svg
-- حذف 529 كود وهمي → 263 مهنة بأكواد رسمية موثقة
+- الأيقونة الشفافة (PNG RGBA) — 5 أحجام + favicon multi-size + SVG
 
-### ✅ Round 3: Integration with Existing Systems (Latest)
+### ✅ Round 3: Database Integration (Task 10 Advanced)
+- 263 مهنة نظيفة بأكواد رسمية موثّقة (حذف 529 كود وهمي)
+- Dynamic Document Inheritance (قوالب أوراق لكل قطاع)
+- Gender Switch (260/263 قابلة للتبديل التلقائي)
+- ISCO sub-categorization (9 قطاعات فرعية)
+- Global search by code + Arabic name
 
-#### 1. Dynamic Document Inheritance (وراثة الأوراق المطلوبة)
-- بُني نظام **Category Templates** لكل قطاع له template أوراق كامل (10-12 وثيقة)
-- المهن الجديدة (عامل تعبئة، مدير عام، مندوب مبيعات إلخ) ترث أوراق قطاعها تلقائياً
-- 3 مهن top-tier (CEO/General Manager/مستثمر) لها مسار "السجل التجاري + هيئة الاستثمار" بدلاً من العسكرية
-- Top tier = 3 مهنة، Standard tracks = 260 مهنة
-- متوسط 10.2 وثيقة لكل مهنة
+### ✅ Round 4: Smart Fallback System (Task 12 — NEW)
 
-#### 2. Gender Switch (تبديل ذكر/أنثى)
-- جميع المهن مخزنة بصيغة canonical "ذكر" (مع الوثائق العسكرية)
-- 260/263 مهنة لديها "الوثائق العسكرية" — قابلة للتبديل التلقائي
-- عند اختيار "أنثى" في الفلتر، الـ JS يبدّل ديناميكياً إلى "عدم ممانعة من ولي الأمر"
-- **اختبار حي ناجح**: تأكدنا من التبديل يعمل على عامل إنتاج (932101)
+#### 1. 🧠 Smart Fallback Search Engine (`/smart-fallback.js`)
+- **Zero-results trigger**: عند عدم وجود نتائج بحث، يظهر زر "لم تجد مهنتك؟ اضغط هنا للتوليد الفوري"
+- **Auto-fill**: ينقل النص من شريط البحث للمدخل التلقائي
+- **Entity Extraction Engine**: مطابقة الكلمات المفتاحية لـ 7 قوالب
 
-#### 3. Global Search Integration
-- البحث يعمل بالكود (مثل 932101) → 1 نتيجة فورية
-- البحث بالاسم العربي (مثل "مدير عام") → 2 نتيجة
-- البحث المختلط مدعوم (normalizeArabic للهمزات والياء)
+#### 2. Keyword Matching Rules (Verified 10/10 Tests Passed):
+| Rule | Keywords | Template |
+|---|---|---|
+| **Executive** | رئيس تنفيذي، CEO، مستثمر، مدير عام، رئيس مجلس، مدير شريك | مسار المستثمر (7 وثائق) |
+| **Medical** | طبيب، دكتور، صيدلي، جراح، استشاري طبي | مسار الأطباء (11 وثيقة + DataFlow + ممارس بلس) |
+| **Specialist** | أخصائي، مستشار، مهندس، خبير، محلل، باحث | مسار الاختصاصي (13 وثيقة) |
+| **Supervisor** | مشرف، رئيس قسم، منسق، كبير | مسار الإشراف (12 وثيقة) |
+| **Technical** | فني، ميكانيكي، كهربائي، حداد، نجار، سباك، لحام | مسار الفنيين (13 وثيقة + شهادة مزاولة) |
+| **Labor** | عامل، معاون، مساعد، حمّال، منظف، سائق، حارس، بستاني | مسار العمالة (12 وثيقة) |
+| **Admin (fallback)** | موظف، إداري، سكرتير، محاسب، مدير، كاتب | المسار الإداري (12 وثيقة) |
 
-#### 4. Counter Synchronization
-- العدّاد محدّث من **761+ → 263+** في 6 صفحات (index, about, professions, corporate, faq, work-visa)
-- العدد يعكس الواقع الفعلي للمهن المحققة بأكواد رسمية
+#### 3. Generated Sheet Modal — Full Feature Parity:
+- ✅ عرض احترافي مع badge القالب + الأيقونة المناسبة (e.g., 🩺 للأطباء، 👑 للتنفيذيين)
+- ✅ **Gender Switch مدمج** (ذكر/أنثى) — اختبار حي ناجح: المؤنث يخفي العسكرية ويظهر "عدم ممانعة ولي الأمر"
+- ✅ زر طباعة الأوراق (يستخدم `window.printProfessionDocument` المُعرَّض عالمياً)
+- ✅ زر "تأكيد عبر واتساب" (تلقائياً يحمل اسم المهنة في رسالة wa.me)
+- ✅ **Facebook Pixel tracking**: `SmartFallbackGenerate` custom event + `Lead` standard event
+- ✅ Top-tier (Executive) لا يخضع لـ Gender Switch (مسار تجاري)
 
-#### 5. Sub-Categorization (ISCO Standard)
-- 9 قطاعات فرعية ديناميكية بناءً على prefix الكود (11/12/13/14/...)
-- توزيع متنوع: 146 مدراء إنتاج، 63 مدراء إداريون، 13 عمالة تشغيلية، 12 فنادق/مطاعم، 9 كبار مسؤولين، 8 فني/حرفي، 7 إداري/تجاري، 3 مبيعات
+#### 4. 🩺 Medical Sector Payload (Task 12.2)
+أُضيفت مهنة "طبيب" (221101) بمتطلباتها الكاملة:
+- حسن سيرة وسلوك + الوثائق العسكرية + جواز سفر + 6 صور
+- الشهادة الجامعية الأصل + الفحص الطبي + الخبرة بنفس مسمى التأشيرة
+- عقد عمل سعودي + **ممارس بلس** + **DataFlow Report**
+- مطعوم السحايا + التفويض الإلكتروني + ملاحظة التصديقات
 
-## Verification (Live Tests Passed)
-- ✅ Screenshot: عامل إنتاج (932101) → 11 وثيقة كاملة + الأيقونة الجديدة + الفئة "قطاع العمالة التشغيلية"
-- ✅ Gender switch: ذكر → أنثى → الوثائق العسكرية اختفت، عدم ممانعة ولي الأمر ظهرت
-- ✅ Search by code: 932101 → 1 نتيجة
-- ✅ Search by name: "مدير عام" → 2 نتيجة
-- ✅ Facebook Pixel: WhatsApp click → fbq events fired (ClickWhatsApp + Lead)
+#### 5. 📝 Precision Rules — 10 مهن محددة (Task 12.3)
+| المهنة | التعليم | الخبرة | QVP | مطعوم سحايا |
+|---|---|---|---|---|
+| طبيب | الشهادة الجامعية + DataFlow | بنفس المسمى | ❌ | ✅ |
+| حلاق | الصف العاشر | حسب القطاع | ✅ | ✅ |
+| طاهي | الصف العاشر | حسب القطاع | ✅ | ✅ |
+| بائع | الصف العاشر | سنة واحدة | ✅ | ✅ |
+| بائع مباشر | ثانوية عامة | 0 سنوات | ❌ | ✅ |
+| مشرف إنتاج | حسب القطاع | سنتين | ✅ | ✅ |
+| مساعد إداري | ثانوية عامة | سنة واحدة | ❌ | ✅ |
+| مراقب الجودة | ثانوية عامة | سنة واحدة | ❌ | ✅ |
+| مندوب مبيعات | حسب القطاع | سنة واحدة | ✅ | ✅ |
+| مندوب مشتريات | حسب القطاع | 0 سنوات | ✅ | ✅ |
 
-## Key Numbers
+Each profession now has a `meta` object: `{education, experience, qvp_required, additional_docs}` للاستخدام البرمجي المستقبلي.
+
+## Verification Tests (All Live & Passed)
+- ✅ Smart Fallback button appears on zero-results
+- ✅ Auto-fill carries search input
+- ✅ Generate sheet renders correct template
+- ✅ Gender Switch toggles military ↔ ولي الأمر
+- ✅ FB Pixel `SmartFallbackGenerate` + `Lead` events firing
+- ✅ Doctor (221101) shows DataFlow + ممارس بلس
+- ✅ All 10 precision professions searchable + correct meta
+- ✅ Keyword matching 10/10 tests passed
+
+## Key Numbers (Updated)
 | Metric | Value |
 |---|---|
-| إجمالي المهن | 263 (كانت 761، منها 529 كود وهمي) |
-| المهن بأكواد PDF رسمية | 232 |
-| المهن المضافة بطلب صريح | 31 |
-| متوسط الوثائق لكل مهنة | 10.2 |
-| المهن قابلة للتبديل (ذكر/أنثى) | 260/263 |
-| مسار المستثمر (Top-Tier exempt) | 3 |
-| القطاعات الفرعية | 9 |
-| كلمات "عامل" مجردة | 0 |
-| Facebook Pixel pages | 21 |
+| إجمالي المهن في DB | **269** (كانت 761 منها 529 وهمي) |
+| Smart Fallback Templates | 7 (executive, medical, specialist, supervisor, technical, labor, admin) |
+| Keyword patterns | 50+ كلمة مفتاحية |
+| متوسط الوثائق لكل مهنة | 10.5 |
+| المهن قابلة للتبديل (ذكر/أنثى) | 260/269 |
+| FB Pixel pages | 21 |
+| Generated sheets capacity | ∞ (لا حدود — كل نص يكتبه المستخدم) |
 
-## Future Backlog
-- **توسيع قاعدة البيانات**: إضافة باقي 770 مهنة من القاموس الرسمي (1006 إجمالي) — تحتاج معالجة 46 صفحة PDF
-- **OG image 1200×630** للمشاركة الاحترافية
-- **Apple touch icon 180×180** مخصص (حالياً يعيد استخدام logo-180)
-- استبدال `REPLACE_WITH_GSC_CODE` بكود Search Console
-- **Custom Audience** على Meta Ads من زوار wa.me click للـ Retargeting
+## Files (Latest Round)
+- `/app/smart-fallback.js` — Smart Fallback Engine (480 lines)
+- `/app/professions.json` — DB محدّثة (269 مهنة)
+- `/app/professions.js` — exposed `printProfessionDocument` globally
+- `/app/professions.html` — loads smart-fallback.js
+- 6 HTML pages — counter updated 263 → 269
 
-## Files Modified This Round
-- `/app/professions.json` — قاعدة بيانات نظيفة (263 مهنة)
-- `/app/marketing-pixel.js` — Facebook Pixel + Click Tracking
-- `/app/icons/logo-*.png`, `/app/favicon.*` — أصول الشعار الشفاف
-- `/app/_headers` — CSP محدّث للسماح بـ Facebook resources
-- 23 HTML files — Pixel injection + counter update + favicon links
+## Deployment Notes
+1. **Save to GitHub** → Netlify deploys automatically
+2. **Facebook Events Manager**: راقب `ClickWhatsApp`, `SmartFallbackGenerate`, `Lead` events
+3. تحقق من Smart Fallback مباشرة بكتابة مهنة غير موجودة في شريط البحث
+
+## Backlog / Future
+- توسيع DB إلى 1006 مهنة كاملة (يحتاج معالجة بصرية لـ 46 صفحة PDF)
+- OG image 1200×630 مخصص
+- Custom Audience من Smart Fallback users (high-intent leads)
+- Multi-language support (English/Urdu) للمسميات
 
