@@ -283,9 +283,15 @@ function showProfessionDetails(profession) {
 
 // Close profession details modal
 function closeProfessionModal() {
- document.getElementById('professionModal').classList.add('hidden');
+ const modal = document.getElementById('professionModal');
+ if (modal) modal.classList.add('hidden');
  document.body.style.overflow = 'auto';
 }
+
+// Expose globally for inline onclick handlers (fixes mobile touch issue)
+window.closeProfessionModal = closeProfessionModal;
+window.printProfessionDetails = printProfessionDetails;
+window.downloadProfessionPDF = downloadProfessionPDF;
 
 // Print profession details
 function printProfessionDetails() {
