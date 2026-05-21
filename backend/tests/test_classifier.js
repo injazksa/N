@@ -122,16 +122,17 @@ function validateStructure() {
   const failures = [];
   const { TEMPLATES } = global.window.smartFallback;
 
-  // 1. Engineer template must have exactly 11 documents (strict spec)
-  if (TEMPLATES.engineer.reqs.length !== 11) {
-    failures.push(`Engineer template: expected 11 docs, got ${TEMPLATES.engineer.reqs.length}`);
+  // 1. Engineer template must have exactly 12 documents (11 spec + meningitis vaccine — required for ALL professions)
+  if (TEMPLATES.engineer.reqs.length !== 12) {
+    failures.push(`Engineer template: expected 12 docs, got ${TEMPLATES.engineer.reqs.length}`);
   }
   const engReqs = TEMPLATES.engineer.reqs.join('|');
   const required = [
     'حسن سيرة', 'الوثائق العسكرية', 'الشهادة الجامعية',
     'فحص طبي', 'خبرة لمدة سنتين', 'عقد عمل',
     'الاعتماد المهني', 'مصادقة السعودي',
-    'نقابة المهندسين الأردنية', 'هيئة المهندسين السعودية', 'تفويض'
+    'نقابة المهندسين الأردنية', 'هيئة المهندسين السعودية', 'تفويض',
+    'مطعوم السحايا'   // ← Required for ALL professions without exception
   ];
   for (const r of required) {
     if (!engReqs.includes(r)) failures.push(`Engineer template missing: "${r}"`);

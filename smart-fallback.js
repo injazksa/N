@@ -23,12 +23,12 @@
   const PASSPORT = 'إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات';
   const PASSPORT_NEW = 'جواز السفر الجديد + صور شخصية عدد 2 بخلفية بيضاء';
   const MEDICAL  = 'عمل فحص طبي من المختبر المعتمد لدى السفارة السعودية (صورة بخلفية بيضاء + جواز السفر)';
-  const VACCINE  = 'شهادة مطعوم السحايا الرباعي';
+  const VACCINE  = 'شهادة مطعوم السحايا';
   const BIO      = 'عمل فحص طبي وبصمة (يتم تحديده من قبل المكتب)';
   const AUTH     = 'عمل تفويض إلكتروني للمكتب';
   const CONTRACT = 'عقد عمل من الشركة السعودية + خطاب إطلاع مختومين من الغرفة التجارية والخارجية السعودية';
   const CONTRACT_DOMESTIC = 'عقد عمل مصدق من الغرفة التجارية والخارجية السعودية';
-  const QVP      = 'الحصول على شهادة الاعتماد المهني (QVP) عبر منصة مساند';
+  const QVP      = 'الحصول على شهادة الاعتماد المهني';
   const ATTEST   = 'ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه (مثل: حسن السيرة والسلوك) من وزارة الخارجية الأردنية قبل تقديمها';
   const DEGREE   = 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل + تصديق من وزارة الخارجية';
   const SCHOOL   = 'إحضار الشهادة المدرسية (الأصل)';
@@ -83,9 +83,10 @@
         QVP, VACCINE, BIO, AUTH, PASSPORT, ATTEST
       ]
     },
-    // 🏗️ ENGINEERING SECTOR — STRICT PRODUCTION PAYLOAD (11 verified docs, no extras)
+    // 🏗️ ENGINEERING SECTOR — STRICT PRODUCTION PAYLOAD (verified docs + meningitis vaccine)
     // Required because regular Specialist track is incomplete for engineers (missing
     // JEA membership, SCE registration, مصادقة السعودي).
+    // NOTE: VACCINE (شهادة مطعوم السحايا) added per policy — required for ALL professions.
     engineer: {
       label: 'مسار المهندسين',
       icon: 'fa-helmet-safety',
@@ -100,6 +101,7 @@
         ENG_MUSADAQA,         // 'الحصول على شهادة من موقع مصادقة السعودي'
         ENG_JEA,              // 'عضوية + مزاولة مهنة من نقابة المهندسين الأردنية'
         ENG_SCE,              // 'التسجيل في هيئة المهندسين السعودية'
+        VACCINE,              // 🆕 'شهادة مطعوم السحايا' — required for ALL professions
         AUTH_OFFICE           // 'عمل تفويض للمكتب'
       ]
     },
@@ -157,8 +159,7 @@
         'شهادة مهنية أو دبلوم متوسط في الحرفة المطلوبة',
         'خبرة لمدة سنتين بنفس مسمى التأشيرة',
         MEDICAL, CONTRACT,
-        'اختبار الكفاءة المهنية (QVP) لمزاولي الحرف الفنية',
-        'شهادة مزاولة مهنة رسمية',
+        QVP,                  // ← canonical "الحصول على شهادة الاعتماد المهني"
         VACCINE, BIO, AUTH, PASSPORT, ATTEST
       ]
     },
@@ -169,7 +170,7 @@
         SECURITY, MILITARY,
         'شهادة دراسة (يقبل ثانوي أو دبلوم)',
         MEDICAL, CONTRACT,
-        'اختبار الفحص المهني (QVP) للحرف اليدوية والتشغيلية',
+        QVP,                  // ← canonical (was "اختبار الفحص المهني (QVP) للحرف اليدوية والتشغيلية")
         VACCINE, BIO, AUTH, PASSPORT, ATTEST
       ]
     },
@@ -445,6 +446,115 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // 🛡️ SMART INPUT VALIDATION — Profession Vocabulary Filter
+  // ───────────────────────────────────────────────────────────────
+  // Prevents garbage inputs ("أنا", "بيت", "حمار", "عمر", "ببسي") from
+  // generating fake document sheets. An input is accepted as a valid
+  // profession only if it meets one of these heuristics:
+  //
+  //   1. STRONG: input matches a keyword in RULES (e.g. "مهندس", "سائق")
+  //   2. MEDIUM: any token (word) in input is a known profession word
+  //              from the live `professions.json` vocabulary
+  //   3. WEAK : input contains a generic profession-class prefix word
+  //              (e.g. "مدرب", "موظف", "مشغل", "مسؤول") followed by
+  //              a qualifier — multi-token compound profession.
+  //
+  // The vocab is built lazily on first call by fetching /professions.json
+  // and adding every word from every name. Falls back gracefully if fetch
+  // fails (network/CORS), in which case validation defers to keyword-only.
+  // ═══════════════════════════════════════════════════════════════
+
+  // Profession-class prefix words: when input STARTS with these and has
+  // 2+ tokens total, we treat it as a legitimate compound profession even
+  // if no rule keyword matches (e.g. "مدرب يوغا", "موظف تجارة دولية").
+  const PROFESSION_PREFIXES = new Set([
+    'مدرب', 'مدرّب', 'مدربة', 'مدرّبة', 'مدربه',
+    'موظف', 'موظفة', 'موظفه',
+    'مشغل', 'مشغّل', 'مشغلة', 'مشغّلة',
+    'مسؤول', 'مسؤولة', 'مسئول', 'مسئولة',
+    'منسق', 'منسقة',
+    'مفتش', 'مفتشة',
+    'فاحص', 'فاحصة',
+    'متخصص', 'متخصصة',
+    'مختص', 'مختصة',
+    'محترف', 'محترفة'
+  ]);
+
+  let _vocabCache = null;     // built lazily
+  let _vocabPromise = null;   // in-flight fetch
+
+  function buildVocabFromRules() {
+    // Always-available baseline: every keyword from every rule
+    const v = new Set();
+    for (const rule of RULES) {
+      for (const kw of rule.keywords) {
+        const n = normalize(kw);
+        if (!n) continue;
+        for (const tok of n.split(/\s+/)) if (tok.length >= 2) v.add(tok);
+      }
+    }
+    for (const p of PROFESSION_PREFIXES) v.add(normalize(p));
+    return v;
+  }
+
+  async function loadProfessionVocab() {
+    if (_vocabCache) return _vocabCache;
+    if (_vocabPromise) return _vocabPromise;
+    const baseline = buildVocabFromRules();
+    _vocabPromise = fetch('/professions.json', { cache: 'force-cache' })
+      .then(r => r.ok ? r.json() : [])
+      .then(list => {
+        for (const p of list || []) {
+          const name = normalize(p.name_ar || p.profession_name_ar || '');
+          for (const tok of name.split(/\s+/)) if (tok.length >= 2) baseline.add(tok);
+        }
+        _vocabCache = baseline;
+        return baseline;
+      })
+      .catch(() => {
+        _vocabCache = baseline;
+        return baseline;
+      });
+    return _vocabPromise;
+  }
+
+  // Kick off vocab load early
+  if (typeof fetch === 'function') loadProfessionVocab();
+
+  /**
+   * Returns { valid: boolean, reason: string }.
+   * `valid=false` means the input does not look like a real profession.
+   */
+  function validateProfessionInput(userTitle) {
+    const norm = normalize(userTitle);
+    if (!norm) return { valid: false, reason: 'empty' };
+    if (norm.length < 3) return { valid: false, reason: 'too_short' };
+    // Reject pure numeric / punctuation
+    if (!/[\u0600-\u06FFa-z]/.test(norm)) return { valid: false, reason: 'no_letters' };
+
+    // (1) STRONG: matches any RULES keyword
+    for (const rule of RULES) {
+      for (const kw of rule.keywords) {
+        if (norm.includes(normalize(kw))) return { valid: true, reason: 'rule_match' };
+      }
+    }
+
+    // (2) MEDIUM: any token is in the live profession vocab
+    const tokens = norm.split(/\s+/).filter(t => t.length >= 2);
+    const vocab = _vocabCache || buildVocabFromRules();
+    for (const tok of tokens) {
+      if (vocab.has(tok)) return { valid: true, reason: 'vocab_match' };
+    }
+
+    // (3) WEAK: starts with a profession-prefix and has 2+ tokens
+    if (tokens.length >= 2 && PROFESSION_PREFIXES.has(tokens[0])) {
+      return { valid: true, reason: 'prefix_compound' };
+    }
+
+    return { valid: false, reason: 'no_match' };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // 🎨 UI: Quick-bar (already injected in HTML) + Modal Panel
   // ═══════════════════════════════════════════════════════════════
   let preSelectedGender = 'male'; // default
@@ -495,6 +605,22 @@
         <i class="fas fa-bolt"></i>
         <span>توليد أوراق المهنة</span>
       </button>
+
+      <!-- 🛡️ Validation error (hidden by default) -->
+      <div id="smart-fallback-error" class="hidden mt-3 bg-amber-50 border-2 border-amber-300 text-amber-900 rounded-xl p-3 sm:p-4 text-sm sm:text-base"
+           data-testid="smart-fallback-error" role="alert">
+        <div class="flex items-start gap-2 sm:gap-3">
+          <i class="fas fa-exclamation-triangle text-amber-600 text-lg mt-0.5 flex-shrink-0"></i>
+          <div class="flex-1">
+            <p class="font-bold mb-1">هذا لا يبدو كاسم مهنة معتمدة</p>
+            <p class="text-xs sm:text-sm leading-relaxed">يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>). إذا كنت متأكد من المسمى، تواصل معنا مباشرة عبر واتساب للتحقق.</p>
+            <a href="https://wa.me/962789881009?text=أريد%20التحقق%20من%20مسمى%20مهنة" target="_blank" rel="noopener"
+               class="mt-2 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-green-700 hover:text-green-800 transition">
+              <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
+            </a>
+          </div>
+        </div>
+      </div>
     `;
 
     // Insert AFTER the quick-bar (which is right under search)
@@ -559,13 +685,34 @@
 
   function generateFromInput() {
     const input = document.getElementById('smart-fallback-input');
+    const errorBox = document.getElementById('smart-fallback-error');
     const userTitle = (input.value || '').trim();
+    // Hide any previous error
+    if (errorBox) errorBox.classList.add('hidden');
+
     if (!userTitle) {
       input.focus();
       input.classList.add('border-red-500');
       setTimeout(() => input.classList.remove('border-red-500'), 1500);
       return;
     }
+
+    // 🛡️ Smart Profession Validation
+    const check = validateProfessionInput(userTitle);
+    if (!check.valid) {
+      input.classList.add('border-red-500');
+      if (errorBox) {
+        errorBox.classList.remove('hidden');
+        setTimeout(() => errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      }
+      setTimeout(() => input.classList.remove('border-red-500'), 2500);
+      // Analytics: track rejected input (helps grow vocab over time)
+      if (typeof window.fbq === 'function') {
+        try { window.fbq('trackCustom', 'SmartFallbackRejected', { query: userTitle, reason: check.reason }); } catch (e) {}
+      }
+      return;
+    }
+
     const match = matchTemplate(userTitle);
     const template = TEMPLATES[match.template];
 
@@ -589,21 +736,22 @@
 
     const html = `
       <div id="generated-sheet-modal" class="fixed inset-0 z-50 overflow-y-auto" data-testid="generated-sheet-modal" role="dialog" aria-modal="true">
-        <div class="flex items-end sm:items-center justify-center min-h-screen px-2 sm:px-4 pt-2 pb-2 sm:p-0">
-          <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" id="generated-sheet-overlay"></div>
+        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" id="generated-sheet-overlay"></div>
 
+        <!-- 🔴 CLOSE BUTTON: top-level fixed, highest z-index, always clickable -->
+        <button id="generated-sheet-close" type="button"
+          class="fixed top-3 left-3 sm:top-4 sm:left-4 w-12 h-12 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-white shadow-xl hover:bg-gray-100 active:bg-gray-200 text-navy text-2xl transition-all touch-manipulation"
+          style="pointer-events:auto; z-index: 9999;"
+          data-testid="generated-sheet-close"
+          aria-label="إغلاق">
+          <i class="fas fa-times pointer-events-none"></i>
+        </button>
+
+        <div class="flex items-end sm:items-center justify-center min-h-screen px-2 sm:px-4 pt-2 pb-2 sm:p-0 relative">
           <div class="relative inline-block w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden text-right my-2 sm:my-8" dir="rtl">
             <!-- Header -->
             <div class="bg-gradient-to-l from-navy to-navy/90 text-white p-4 sm:p-6 relative">
-              <!-- Close button - large touch target -->
-              <button id="generated-sheet-close" type="button"
-                class="absolute top-3 left-3 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/30 active:bg-white/40 text-white text-2xl transition-all touch-manipulation"
-                data-testid="generated-sheet-close"
-                aria-label="إغلاق">
-                <i class="fas fa-times pointer-events-none"></i>
-              </button>
-
-              <div class="pl-12">
+              <div class="pl-14 sm:pl-14">
                 <div class="inline-flex items-center gap-2 bg-gold/20 text-gold px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold mb-2">
                   <i class="fas ${template.icon}"></i>
                   <span>${escapeHtml(template.label)}</span>
@@ -667,20 +815,40 @@
     document.body.style.overflow = 'hidden'; // lock scroll
     renderRequirements();
 
-    // ─── Close button: SINGLE handler using 'click' (works reliably on mobile
-    //     when combined with touch-action: manipulation, which Tailwind already
-    //     provides). Using BOTH click+touchend caused double-fire / ghost-click
-    //     hangs on iOS Safari. ───
-    const closeBtn = document.getElementById('generated-sheet-close');
-    const overlay  = document.getElementById('generated-sheet-overlay');
+    // ─── Close button: BULLETPROOF event delegation on document.
+    //     Works regardless of DOM mutations or stacking context issues. ───
     const closeHandler = function (e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       closeGeneratedSheet();
     };
-    closeBtn.addEventListener('click', closeHandler);
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) closeHandler(e);
-    });
+    // Direct listener (primary path)
+    const closeBtn = document.getElementById('generated-sheet-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeHandler);
+      closeBtn.addEventListener('touchstart', function(e){ e.preventDefault(); closeHandler(e); }, { passive: false });
+    }
+    // Overlay click (tap outside) to close
+    const overlay = document.getElementById('generated-sheet-overlay');
+    if (overlay) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeHandler(e);
+      });
+    }
+    // BACKUP path: event delegation on body — catches any future click on the close button
+    // even if the direct listener is somehow lost. Self-removing after modal closes.
+    function bodyDelegate(e) {
+      const t = e.target;
+      if (!t) return;
+      const isCloseBtn = (t.id === 'generated-sheet-close') ||
+                        (t.closest && t.closest('#generated-sheet-close')) ||
+                        (t.getAttribute && t.getAttribute('data-testid') === 'generated-sheet-close');
+      if (isCloseBtn) {
+        e.preventDefault(); e.stopPropagation();
+        closeGeneratedSheet();
+        document.body.removeEventListener('click', bodyDelegate, true);
+      }
+    }
+    document.body.addEventListener('click', bodyDelegate, true);
     // Also ESC key
     document.addEventListener('keydown', escClose);
 

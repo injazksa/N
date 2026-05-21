@@ -252,4 +252,59 @@ Instead of first-match wins, the classifier collects **ALL** keyword hits and se
   - Inner-body smooth scroll
 - ✏️ `/app/backend/tests/test_classifier.js`: +20 حالة اختبار جديدة + structural validation
 
+---
+
+## ✅ Round 8: Canonical Docs + Smart Validation + Bulletproof X Button (2026-02-21)
+
+### 📄 Canonical Document Strings (no more "اجتهاد")
+استبدلنا النصوص المخصصة بالنصوص الـ canonical المستخدمة في professions.json:
+- **مطعوم السحايا**: `'شهادة مطعوم السحايا'` (230 occurrences in DB) — كان "الرباعي"
+- **الاعتماد المهني**: `'الحصول على شهادة الاعتماد المهني'` (229 occurrences) — كان فيه إضافات "(QVP) عبر منصة مساند" و"للحرف اليدوية والتشغيلية"
+- **حذف "اختبار الكفاءة المهنية (QVP) لمزاولي الحرف الفنية"** من technical template
+- **حذف "اختبار الفحص المهني (QVP) للحرف اليدوية والتشغيلية"** من labor template
+
+### 💉 مطعوم السحايا for ALL professions (no exceptions)
+أضفنا `VACCINE` لـ engineer template (كان مستثنى). أصبح في كل الـ **15 قالب** بدون استثناء:
+executive, medical, specialist, engineer, sales_rep, intermediate_admin, direct_sales, supervisor, technical, labor, driver, domestic_female, domestic_male, admin, general ✅
+
+### 🛡️ Smart Profession Validation (Vocabulary Filter)
+يمنع المدخلات العشوائية ("أنا", "بيت", "حمار", "عمر", "ببسي", "123") من توليد أوراق مزيفة.
+**3 طبقات تحقق**:
+1. **STRONG**: input matches a RULES keyword → accepted
+2. **MEDIUM**: any token in input exists in vocab built from `professions.json` (273 مهنة) — مبني بكسل بالـ lazy fetch
+3. **WEAK**: input starts with profession-prefix (مدرب/موظف/مشغل/مسؤول/منسق/...) AND has 2+ tokens
+
+**Error UI**: عرض رسالة لطيفة (amber alert) مع زر واتساب للحالات النادرة.
+**Analytics**: تتبع `SmartFallbackRejected` event في Facebook Pixel — يبني قائمة بالمهن الجديدة اللي يطلبها العملاء لإضافتها لاحقاً.
+
+### 🐛 X Close Button — BULLETPROOF FIX
+**السبب الجذري المكتشف**: `z-[60]` كان arbitrary Tailwind value **لم يُولَّد في الـ static build**، فالزر كان عند `z-index: auto` والـ flex container كان يعترض النقرة (`elementFromPoint` رجع DIV ليس الزر).
+
+**الحل النهائي**:
+1. نقل الزر خارج الـ inline-block (top-level fixed)
+2. `style="pointer-events:auto; z-index: 9999;"` inline لتجاوز Tailwind purge
+3. خلفية بيضاء (بدلاً من شفافة) + shadow-xl لوضوح بصري
+4. Triple-path event handlers: direct click + touchstart + body delegation
+5. ESC key + overlay click كذلك
+
+**التحقق**: `elementFromPoint(center)` رجع الزر نفسه = الزر فعلاً فوق كل العناصر. نقرة حقيقية (بدون force) تغلق المودال + ترجع body overflow.
+
+### Test Coverage (Round 8 additions)
+- 🧪 53/53 classifier mappings (unchanged from Round 7)
+- 🧪 Structural: engineer=12 docs (added VACCINE)، VACCINE in all 15 templates
+- 🧪 Browser smoke: 11/11 inputs validated correctly (6 garbage rejected + 5 legitimate accepted)
+- 🧪 X button: real click closes modal + body overflow restored
+
+### Files Modified
+- ✏️ `/app/smart-fallback.js`:
+  - VACCINE constant updated to canonical "شهادة مطعوم السحايا"
+  - QVP constant updated to canonical "الحصول على شهادة الاعتماد المهني"
+  - VACCINE added to engineer template (12 docs total)
+  - technical/labor QVP texts replaced with canonical
+  - Added `PROFESSION_PREFIXES`, `_vocabCache`, `loadProfessionVocab()`, `validateProfessionInput()`
+  - `generateFromInput()` now validates before rendering — shows amber error for garbage
+  - Close button refactored to fixed top-level with z-index: 9999 + triple-path handlers
+  - Added `#smart-fallback-error` element to panel HTML
+- ✏️ `/app/backend/tests/test_classifier.js`: updated engineer expected count (11→12)
+
 
