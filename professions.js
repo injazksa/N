@@ -266,6 +266,16 @@ function showProfessionDetails(profession) {
  
  const requirementsList = document.getElementById('modalRequirementsList');
  requirementsList.innerHTML = requirements.map(req => `<li class="py-2 border-b border-gray-100 last:border-0">${req}</li>`).join('');
+
+ // 🔗 SEO: Add link to dedicated programmatic landing page
+ if (profession.slug) {
+   const seoLinkEl = document.getElementById('modalSeoLink');
+   const url = `/p/${encodeURIComponent(profession.slug)}.html`;
+   if (seoLinkEl) {
+     seoLinkEl.href = url;
+     seoLinkEl.classList.remove('hidden');
+   }
+ }
  
  const modal = document.getElementById('professionModal');
  modal.classList.remove('hidden');
