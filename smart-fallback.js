@@ -114,6 +114,7 @@
         PASSPORT_NEW,
         CONTRACT_DOMESTIC,
         DRIVER_LICENSE,
+        'إحضار رخصة السياقة الأصلية والنافذة',
         AUTH,
         VACCINE
       ]
@@ -177,40 +178,40 @@
       id: 'driver', template: 'driver',
       keywords: ['سائق', 'ساءق', 'سائق خاص', 'سائق عائلة', 'سائق سيارة']
     },
-    // Executive (top-tier)
+    // Executive (top-tier) — HOTFIX: expanded
     {
       id: 'executive', template: 'executive',
-      keywords: ['رئيس تنفيذي', 'ceo', 'مستثمر', 'مدير عام', 'رئيس مجلس', 'رئيس شركة', 'مدير شريك']
+      keywords: ['رئيس تنفيذي', 'ceo', 'cfo', 'cto', 'coo', 'مستثمر', 'مدير عام', 'مدير عمليات', 'رئيس مجلس', 'رئيس شركة', 'مدير شريك', 'شريك مؤسس', 'مؤسس']
     },
-    // Medical
+    // Medical (HOTFIX: expanded with paramedic, dentist, nurse etc.)
     {
       id: 'medical', template: 'medical',
-      keywords: ['طبيب', 'دكتور', 'صيدلي', 'صيدلاني', 'استشاري طبي', 'جراح', 'طبيبه']
+      keywords: ['طبيب', 'طبيبه', 'طبيبة', 'دكتور', 'دكتوره', 'دكتورة', 'صيدلي', 'صيدلانيه', 'صيدلانية', 'صيدلاني', 'استشاري طبي', 'جراح', 'طبيب أسنان', 'ممرض', 'ممرضه', 'ممرضة', 'مسعف', 'فيزيائي علاجي', 'علاج طبيعي', 'مختبري']
     },
-    // Specialist (degree-required)
+    // Specialist (degree-required) — HOTFIX: expanded
     {
       id: 'specialist', template: 'specialist',
-      keywords: ['أخصائي', 'اخصائي', 'مستشار', 'مهندس', 'خبير', 'محلل', 'استشاري', 'باحث']
+      keywords: ['أخصائي', 'اخصائي', 'أخصائيه', 'أخصائية', 'مستشار', 'مستشاره', 'مهندس', 'مهندسه', 'مهندسة', 'خبير', 'محلل', 'استشاري', 'باحث', 'محامي', 'مدقق حسابات', 'مصمم', 'مبرمج', 'مطور', 'معماري']
     },
     // Supervisor
     {
       id: 'supervisor', template: 'supervisor',
       keywords: ['مشرف', 'رئيس قسم', 'مسؤول قسم', 'منسق', 'كبير']
     },
-    // Technical / Artisan
+    // Technical / Artisan (HOTFIX: expanded technical taxonomy)
     {
       id: 'technical', template: 'technical',
-      keywords: ['فني', 'ميكانيكي', 'كهربائي', 'حداد', 'نجار', 'سباك', 'صحي', 'لحام', 'مبرد', 'مكيف', 'صياغ', 'تركيب', 'صيانة']
+      keywords: ['فني', 'ميكانيكي', 'كهربائي', 'حداد', 'نجار', 'سباك', 'صحي', 'لحام', 'مبرد', 'مكيف', 'صياغ', 'تركيب', 'صيانة', 'دهان', 'بلاط', 'مبلط', 'مصلح']
     },
-    // Labor / Operational (default for any vocational)
+    // Vocational / Labor (HOTFIX: expanded with طاهي/حلاق/بائع/خياط etc.)
     {
       id: 'labor', template: 'labor',
-      keywords: ['عامل', 'معاون', 'مساعد', 'حمّال', 'حمال', 'منظف', 'منظفه', 'منظفة', 'حارس', 'بستاني', 'مزارع', 'سائس', 'راعي', 'عاملة']
+      keywords: ['عامل', 'عاملة', 'معاون', 'مساعد', 'حمّال', 'حمال', 'منظف', 'منظفه', 'منظفة', 'حارس', 'بستاني', 'مزارع', 'سائس', 'راعي', 'طاهي', 'طبّاخ', 'طباخ', 'حلاق', 'بائع', 'بائعه', 'بائعة', 'خياط', 'خبّاز', 'خباز', 'جزار', 'كناس', 'ساعي', 'مراسل']
     },
-    // Admin (true office worker — last fallback)
+    // Admin (true office worker — last fallback before default labor)
     {
       id: 'admin', template: 'admin',
-      keywords: ['موظف', 'إداري', 'سكرتير', 'محاسب', 'مدير', 'مدخل بيانات', 'كاتب']
+      keywords: ['موظف', 'إداري', 'سكرتير', 'سكرتيره', 'سكرتيرة', 'محاسب', 'محاسبة', 'مدير', 'مدخل بيانات', 'كاتب', 'كاتبه']
     }
   ];
 
