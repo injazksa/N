@@ -100,13 +100,15 @@ function isGibberish(input) {
     const nonsensicalPatterns = [
         "انا", "مين", "شو", "وين", "ليش", "مش", "انت", "لا", "ميسي", "رونالدو", "بطيخ", 
         "كلب", "حيوان", "حمار", "خيل", "ابن", "ملعون", "طيز", "منيك", "شرموط", "عرص",
-        "asd", "qwe", "zxc", "123"
+        "asd", "qwe", "zxc", "123", "مطرب", "مغني", "فنان", "سعفون", "جربان", "جرابين",
+        "قحبة", "كس", "شلن", "مرا الملعون", "الشراميط", "المنيك", "طيزري"
     ];
     
     if (nonsensicalPatterns.some(p => norm.includes(p))) return true;
     
-    // Rule: "مهندس كلب" example from prompt
-    if (norm.includes("مهندس") && (norm.includes("كلب") || norm.includes("حيوان"))) return true;
+    // Check for fake job compounds
+    const fakeCompounds = ["مهندس انا", "مهندس بيت", "عامل مصري", "عامل برميل", "عامل تنين", "عامل فقط", "عامل عام", "عامل عملة", "عامل زريعه", "عامل طوب", "مهندس مجاري", "مهندسين كنادر", "كندرجي"];
+    if (fakeCompounds.some(p => norm.includes(p))) return true;
     
     return false;
 }
@@ -136,7 +138,7 @@ function classifyProfession(inputName) {
         BASE: [
             "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند)",
             "الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة) + دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء",
-            "عمل فحص طبي وبصمة (يتم تحديده من قبل المكتب)",
+            "عمل فحص طبي وبصمة معتمد لدى السفارة السعودية + صورة شخصية خلفية بيضاء + جواز السفر",
             "عقد عمل من الشركة السعودية + خطاب إطلاع مختومين من الغرفة التجارية والخارجية السعودية",
             "عمل تفويض إلكتروني للمكتب",
             "شهادة مطعوم السحايا الرباعي",
@@ -172,11 +174,11 @@ function classifyProfession(inputName) {
             "الحصول على شهادة الاعتماد المهني ومزاولة المهنة"
         ],
         LABOUR_ADDON: [
-            "إحضار شهادة مدرسية (وليس ثانوية أو دبلوم)"
+            "إحضار الشهادة المدرسية (الأصل)"
         ],
         DRIVER_ADDON: [
             "رخصة سياقة سارية المفعول (مختومة من السفارة)",
-            "فحص طبي خاص بالسائقين"
+            "عمل فحص طبي وبصمة معتمد لدى السفارة السعودية + صورة شخصية خلفية بيضاء + جواز السفر"
         ]
     };
 
@@ -224,19 +226,23 @@ function classifyProfession(inputName) {
         if (normName.includes("مندوب") || normName.includes("مشتريات")) {
             role = "Sales / Purchasing Representative";
             finalReqs.splice(2, 0, ...DOCS.ACADEMIC_ADDON);
-        } else if (normName.includes("بائع مباشر")) {
-            role = "Direct Sales";
-            finalReqs.splice(2, 0, DOCS.TECHNICAL_ADDON[0]); // Only school
+        } else if (normName.includes("بائع") || normName.includes("منسق زهور")) {
+            role = "Direct Sales / Service";
+            finalReqs.splice(2, 0, "إحضار شهادة الصف العاشر", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة"); 
         } else {
             role = "Administrative Staff";
-            finalReqs.splice(2, 0, ...DOCS.TECHNICAL_ADDON.slice(0, 2)); // School + 1y exp
+            finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
         }
     }
     // 7. TECHNICAL / QUALITY
     else if (normName.includes("فني") || normName.includes("مراقب") || normName.includes("تفتيش") || normName.includes("جودة") || normName.includes("ميكانيك") || normName.includes("كهرباء")) {
         category = "الفنيون";
         role = normName.includes("جودة") ? "Quality Controller" : "Technical Worker";
-        finalReqs.splice(2, 0, ...DOCS.TECHNICAL_ADDON);
+        if (normName.includes("جودة") || normName.includes("مساعد اداري")) {
+             finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
+        } else {
+             finalReqs.splice(2, 0, ...DOCS.TECHNICAL_ADDON);
+        }
     }
     // 8. LABOUR / WAREHOUSE
     else if (normName.includes("عامل") || normName.includes("تحميل") || normName.includes("تنزيل") || normName.includes("تغليف") || normName.includes("مخزن") || normName.includes("تنظيف")) {
@@ -244,13 +250,22 @@ function classifyProfession(inputName) {
         role = normName.includes("مخزن") ? "Warehouse Worker" : 
                normName.includes("تغليف") ? "Packing Worker" : 
                normName.includes("تنظيف") ? "Cleaning Worker" : "General Labour";
+        
+        // Remove Accreditation for specific low-skilled roles
+        if (normName.includes("ملصقات") || normName.includes("تنظيف خزانات")) {
+            // Already handled by LABOUR_ADDON not having QVP
+        }
         finalReqs.splice(2, 0, ...DOCS.LABOUR_ADDON);
     }
     // 9. SKILLED SERVICE (Chef, Barber, etc.)
     else if (normName.includes("طاهي") || normName.includes("شيف") || normName.includes("حلاق") || normName.includes("مصفف") || normName.includes("منسق زهور")) {
         category = "الحرفيون";
         role = "Skilled Service Professional";
-        finalReqs.splice(2, 0, ...DOCS.SKILLED_SERVICE_ADDON);
+        if (normName.includes("مصفف شعر")) {
+            finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة", "شهادة مزاولة مهنة", "شهادة الاعتماد المهني");
+        } else {
+            finalReqs.splice(2, 0, ...DOCS.SKILLED_SERVICE_ADDON);
+        }
     }
     // 10. DRIVERS
     else if (normName.includes("سائق")) {

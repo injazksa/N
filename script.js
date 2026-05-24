@@ -333,115 +333,137 @@ function printProfessionDocument(professionCode, professionName, requirements) {
  // Create a new window for printing
  const printWindow = window.open('', '_blank');
  
- const printContent = `
- <!DOCTYPE html>
- <html lang="ar" dir="rtl">
- <head>
- <meta charset="UTF-8">
- <title>الأوراق المطلوبة - ${professionName}</title>
- <style>
- @page {
- size: A4;
- margin: 20mm;
- }
- body {
- font-family: 'Arial', sans-serif;
- direction: rtl;
- text-align: right;
- line-height: 1.8;
- color: #333;
- }
- .print-header {
- text-align: center;
- margin-bottom: 30px;
- padding-bottom: 20px;
- border-bottom: 3px solid #C9A26A;
- }
- .print-header h1 {
- color: #1B2A41;
- font-size: 28px;
- margin-bottom: 10px;
- }
- .print-header .subtitle {
- color: #C9A26A;
- font-size: 18px;
- font-weight: bold;
- margin-bottom: 15px;
- }
- .office-info {
- color: #475569;
- font-size: 14px;
- line-height: 1.6;
- }
- .document-title {
- background: #1B2A41;
- color: white;
- padding: 15px;
- margin: 20px 0;
- border-radius: 8px;
- font-size: 20px;
- font-weight: bold;
- text-align: center;
- }
- .profession-info {
- background: #f9fafb;
- padding: 15px;
- margin: 20px 0;
- border-right: 4px solid #C9A26A;
- border-radius: 4px;
- }
- .requirements-list {
- margin: 20px 0;
- }
- .requirements-list li {
- padding: 10px 0;
- border-bottom: 1px solid #e5e7eb;
- list-style-position: inside;
- }
- .footer {
- margin-top: 40px;
- padding-top: 20px;
- border-top: 2px solid #C9A26A;
- text-align: center;
- color: #64748b;
- font-size: 12px;
- }
- </style>
- </head>
- <body>
- <div class="print-header">
- <h1>مكتب تأشيرات السعودية في الأردن</h1>
- <div class="subtitle">المركز المعتمد من السفارة السعودية</div>
- <div class="office-info">
- <div>📍 العنوان: الدوار الأول - جبل عمان، الأردن</div>
- <div>📞 الهاتف / واتساب: 0789881009</div>
- <div>✉️ البريد الإلكتروني: Visa@saudia-visa.com</div>
- <div>🌐 الموقع الإلكتروني: www.saudia-visa.com</div>
- </div>
- </div>
- 
- <div class="document-title">
- الأوراق المطلوبة لتأشيرة العمل السعودية
- </div>
- 
- <div class="profession-info">
- <strong>المهنة:</strong> ${professionName}<br>
- <strong>رمز المهنة:</strong> ${professionCode}<br>
- <strong>تاريخ الطباعة:</strong> ${new Date().toLocaleDateString('ar-SA')}
- </div>
- 
- <h2 style="color: #1B2A41; margin-top: 30px;">الأوراق والمستندات المطلوبة:</h2>
- <ol class="requirements-list">
- ${requirements.map(req => `<li>${req}</li>`).join('')}
- </ol>
- 
- <div class="footer">
- <p><strong>ملاحظة:</strong> قد تختلف المتطلبات حسب السفارة والحالة الفردية. يرجى التواصل معنا للحصول على معلومات دقيقة ومحدثة.</p>
- <p style="margin-top: 10px;">© 2025 مكتب تأشيرات السعودية في الأردن - جميع الحقوق محفوظة</p>
- </div>
- </body>
- </html>
- `;
+  const isCompact = requirements.length > 8;
+  const printContent = `
+	 <!DOCTYPE html>
+	 <html lang="ar" dir="rtl">
+	 <head>
+	 <meta charset="UTF-8">
+	 <title>الأوراق المطلوبة - ${professionName}</title>
+	 <style>
+	 @page {
+	 size: A4;
+	 margin: 10mm 15mm;
+	 }
+	 * { box-sizing: border-box; }
+	 body {
+	 font-family: 'Arial', sans-serif;
+	 direction: rtl;
+	 text-align: right;
+	 line-height: ${isCompact ? '1.4' : '1.6'};
+	 color: #1e293b;
+	 margin: 0;
+	 padding: 0;
+	 font-size: ${isCompact ? '13px' : '14px'};
+	 }
+	 .print-container {
+	 width: 100%;
+	 max-height: 100%;
+	 page-break-inside: avoid;
+	 break-inside: avoid;
+	 display: flex;
+	 flex-direction: column;
+	 }
+	 .print-header {
+	 text-align: center;
+	 margin-bottom: ${isCompact ? '15px' : '25px'};
+	 padding-bottom: ${isCompact ? '10px' : '15px'};
+	 border-bottom: 2px solid #C9A26A;
+	 }
+	 .print-header h1 {
+	 color: #1B2A41;
+	 font-size: ${isCompact ? '22px' : '26px'};
+	 margin: 0 0 5px 0;
+	 }
+	 .print-header .subtitle {
+	 color: #C9A26A;
+	 font-size: ${isCompact ? '15px' : '17px'};
+	 font-weight: bold;
+	 margin-bottom: 8px;
+	 }
+	 .office-info {
+	 color: #475569;
+	 font-size: ${isCompact ? '11px' : '12px'};
+	 line-height: 1.4;
+	 }
+	 .document-title {
+	 background: #1B2A41;
+	 color: white;
+	 padding: ${isCompact ? '8px' : '12px'};
+	 margin: ${isCompact ? '10px 0' : '15px 0'};
+	 border-radius: 6px;
+	 font-size: ${isCompact ? '16px' : '18px'};
+	 font-weight: bold;
+	 text-align: center;
+	 }
+	 .profession-info {
+	 background: #f8fafc;
+	 padding: ${isCompact ? '10px' : '12px'};
+	 margin: ${isCompact ? '8px 0' : '12px 0'};
+	 border-right: 4px solid #C9A26A;
+	 border-radius: 4px;
+	 font-size: ${isCompact ? '12px' : '13px'};
+	 }
+	 .requirements-list {
+	 margin: ${isCompact ? '10px 0' : '15px 0'};
+	 padding-right: 25px;
+	 }
+	 .requirements-list li {
+	 padding: ${isCompact ? '4px 0' : '8px 0'};
+	 border-bottom: 1px solid #f1f5f9;
+	 }
+	 .requirements-list li:last-child { border-bottom: none; }
+	 .footer {
+	 margin-top: auto;
+	 padding-top: 15px;
+	 border-top: 1px solid #e2e8f0;
+	 text-align: center;
+	 color: #64748b;
+	 font-size: 10px;
+	 }
+	 .footer p { margin: 2px 0; }
+	 h2 { 
+	 color: #1B2A41; 
+	 margin: ${isCompact ? '10px 0 5px' : '20px 0 10px'}; 
+	 font-size: ${isCompact ? '16px' : '18px'};
+	 }
+	 </style>
+	 </head>
+	 <body>
+	 <div class="print-container">
+	 <div class="print-header">
+	 <h1>مكتب تأشيرات السعودية في الأردن</h1>
+	 <div class="subtitle">المركز المعتمد من السفارة السعودية</div>
+	 <div class="office-info">
+	 <div>📍 العنوان: الدوار الأول - جبل عمان، الأردن</div>
+	 <div>📞 الهاتف / واتساب: 0789881009 | ✉️ البريد: Visa@saudia-visa.com</div>
+	 <div>🌐 الموقع الإلكتروني: www.saudia-visa.com</div>
+	 </div>
+	 </div>
+	 
+	 <div class="document-title">
+	 الأوراق المطلوبة لتأشيرة العمل السعودية
+	 </div>
+	 
+	 <div class="profession-info">
+	 <strong>المهنة:</strong> ${professionName} | 
+	 <strong>رمز المهنة:</strong> ${professionCode} | 
+	 <strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}
+	 </div>
+	 
+	 <h2>الأوراق والمستندات المطلوبة:</h2>
+	 <ol class="requirements-list">
+	 ${requirements.map(req => `<li>${req}</li>`).join('')}
+	 </ol>
+	 
+	 <div class="footer">
+	 <p><strong>ملاحظة:</strong> قد تختلف المتطلبات حسب السفارة والحالة الفردية. يرجى التواصل معنا للحصول على معلومات دقيقة ومحدثة.</p>
+	 <p>© 2025 مكتب تأشيرات السعودية في الأردن - جميع الحقوق محفوظة</p>
+	 </div>
+	 </div>
+	 </body>
+	 </html>
+	 `;
  
  printWindow.document.write(printContent);
  printWindow.document.close();

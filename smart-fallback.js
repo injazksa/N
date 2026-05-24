@@ -18,13 +18,12 @@
   // ═══════════════════════════════════════════════════════════════
   const SECURITY = 'حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند)';
   const MILITARY = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة) + دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء';
-  const MILITARY_FULL = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء) إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات';
+  const MILITARY_FULL = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء)';
   const FEMALE_PERMISSION = 'عدم ممانعة من ولي الأمر (في حالة كانت متزوجة إحضار شهادة الزواج وعدم الممانعة من الزوج + صورة عن جواز سفر الزوج) (في حال كانت عزباء، إحضار عدم ممانعة من ولي الأمر + قيد فردي + صورة عن جواز سفر ولي الأمر)';
   const PASSPORT = 'إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات';
   const PASSPORT_NEW = 'جواز السفر الجديد + صور شخصية عدد 2 بخلفية بيضاء';
-  const MEDICAL  = 'عمل فحص طبي من المختبر المعتمد لدى السفارة السعودية (صورة بخلفية بيضاء + جواز السفر)';
-  const VACCINE  = 'شهادة مطعوم السحايا';
-  const BIO      = 'عمل فحص طبي وبصمة (يتم تحديده من قبل المكتب)';
+  const MEDICAL_BIO = 'عمل فحص طبي وبصمة معتمد لدى السفارة السعودية + صورة شخصية خلفية بيضاء + جواز السفر';
+  const VACCINE  = 'شهادة مطعوم السحايا الرباعي';
   const AUTH     = 'عمل تفويض إلكتروني للمكتب';
   const CONTRACT = 'عقد عمل من الشركة السعودية + خطاب إطلاع مختومين من الغرفة التجارية والخارجية السعودية';
   const CONTRACT_DOMESTIC = 'عقد عمل مصدق من الغرفة التجارية والخارجية السعودية';
@@ -56,7 +55,7 @@
         SECURITY,
         'السجل التجاري السعودي ورخصة الاستثمار (يكون الاسم ظاهر بالسجل التجاري)',
         'التفويض من هيئة الاستثمار',
-        BIO, VACCINE, AUTH, PASSPORT,
+        MEDICAL_BIO, VACCINE, AUTH,
         'ملاحظة هامة جداً: يستخدم هذا المسار للمستثمرين والمدراء التنفيذيين الذين يملكون أو يديرون كياناً رسمياً في السعودية. لا يلزم خدمة العلم أو الاعتماد المهني لهذا المستوى.'
       ]
     },
@@ -64,7 +63,7 @@
       label: 'مسار الأطباء والكوادر الصحية',
       icon: 'fa-stethoscope',
       reqs: [
-        SECURITY, MILITARY_FULL, DEGREE, MEDICAL,
+        SECURITY, MILITARY_FULL, DEGREE, MEDICAL_BIO,
         'خبرة بنفس مسمى التأشيرة',
         CONTRACT,
         'شهادة التصنيف والتسجيل المهني من الهيئة السعودية للتخصصات الصحية (ممارس بلس)',
@@ -77,10 +76,10 @@
       icon: 'fa-user-graduate',
       reqs: [
         SECURITY, MILITARY, DEGREE,
-        ENG_EXP_2Y,           // ← UPDATED: "خبرة لمدة سنتين بنفس مسمى التأشيرة"
-        MEDICAL, CONTRACT,
+        ENG_EXP_2Y,
+        MEDICAL_BIO, CONTRACT,
         'شهادة تصنيف مهني من الهيئة المختصة',
-        QVP, VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        QVP, VACCINE, AUTH, ATTEST
       ]
     },
     // 🏗️ ENGINEERING SECTOR — STRICT PRODUCTION PAYLOAD (verified docs + meningitis vaccine)
@@ -92,17 +91,17 @@
       icon: 'fa-helmet-safety',
       reqs: [
         SECURITY,
-        MILITARY_FULL,        // includes passport + 6 photos
-        ENG_DEGREE,           // 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل'
-        MEDICAL,
-        ENG_EXP_2Y,           // 'خبرة لمدة سنتين بنفس مسمى التأشيرة'
+        MILITARY_FULL,
+        ENG_DEGREE,
+        MEDICAL_BIO,
+        ENG_EXP_2Y,
         CONTRACT,
-        ENG_ACCRED,           // 'الحصول على شهادة الاعتماد المهني'
-        ENG_MUSADAQA,         // 'الحصول على شهادة من موقع مصادقة السعودي'
-        ENG_JEA,              // 'عضوية + مزاولة مهنة من نقابة المهندسين الأردنية'
-        ENG_SCE,              // 'التسجيل في هيئة المهندسين السعودية'
-        VACCINE,              // 🆕 'شهادة مطعوم السحايا' — required for ALL professions
-        AUTH_OFFICE           // 'عمل تفويض للمكتب'
+        ENG_ACCRED,
+        ENG_MUSADAQA,
+        ENG_JEA,
+        ENG_SCE,
+        VACCINE,
+        AUTH_OFFICE
       ]
     },
     // High-tier specialist with reduced experience requirement (مندوب مبيعات)
@@ -111,9 +110,9 @@
       icon: 'fa-handshake',
       reqs: [
         SECURITY, MILITARY, DEGREE,
-        ENG_EXP_1Y,           // ← OVERRIDE: 1 year only
-        MEDICAL, CONTRACT,
-        VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        ENG_EXP_1Y,
+        MEDICAL_BIO, CONTRACT,
+        VACCINE, AUTH, ATTEST
       ]
     },
     // Intermediate academic track — High School + 1 year + NO QVP
@@ -122,11 +121,10 @@
       icon: 'fa-clipboard-check',
       reqs: [
         SECURITY, MILITARY,
-        SECONDARY_SCHOOL,     // ← FORCE: Secondary instead of Degree
-        ENG_EXP_1Y,           // 1 year experience
-        MEDICAL, CONTRACT,
-        VACCINE, BIO, AUTH, PASSPORT, ATTEST
-        // ⚠️ NO QVP — explicitly stripped per spec
+        SECONDARY_SCHOOL,
+        ENG_EXP_1Y,
+        MEDICAL_BIO, CONTRACT,
+        VACCINE, AUTH, ATTEST
       ]
     },
     // No-experience entry track — بائع مباشر
@@ -136,10 +134,9 @@
       reqs: [
         SECURITY, MILITARY,
         SECONDARY_SCHOOL,
-        ENG_EXP_NONE,         // No prior experience required
-        MEDICAL, CONTRACT,
-        VACCINE, BIO, AUTH, PASSPORT, ATTEST
-        // ⚠️ NO QVP — explicitly stripped per spec
+        ENG_EXP_NONE,
+        MEDICAL_BIO, CONTRACT,
+        VACCINE, AUTH, ATTEST
       ]
     },
     supervisor: {
@@ -148,7 +145,7 @@
       reqs: [
         SECURITY, MILITARY, DEGREE,
         'خبرة لا تقل عن سنتين في موقع إشرافي',
-        MEDICAL, CONTRACT, QVP, VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        MEDICAL_BIO, CONTRACT, QVP, VACCINE, AUTH, ATTEST
       ]
     },
     technical: {
@@ -158,9 +155,9 @@
         SECURITY, MILITARY,
         'شهادة مهنية أو دبلوم متوسط في الحرفة المطلوبة',
         'خبرة لمدة سنتين بنفس مسمى التأشيرة',
-        MEDICAL, CONTRACT,
-        QVP,                  // ← canonical "الحصول على شهادة الاعتماد المهني"
-        VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        MEDICAL_BIO, CONTRACT,
+        QVP,
+        VACCINE, AUTH, ATTEST
       ]
     },
     labor: {
@@ -168,10 +165,9 @@
       icon: 'fa-people-carry-box',
       reqs: [
         SECURITY, MILITARY,
-        'شهادة دراسة (يقبل ثانوي أو دبلوم)',
-        MEDICAL, CONTRACT,
-        QVP,                  // ← canonical (was "اختبار الفحص المهني (QVP) للحرف اليدوية والتشغيلية")
-        VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        'إحضار الشهادة المدرسية (الأصل)',
+        MEDICAL_BIO, CONTRACT,
+        VACCINE, AUTH, PASSPORT, ATTEST
       ]
     },
     // === HOTFIX: Specialized templates that BLOCK Specialist/Manager fallback ===
@@ -183,8 +179,7 @@
         SECURITY,
         MILITARY_FULL,
         SCHOOL,
-        MEDICAL,
-        PASSPORT_NEW,
+        MEDICAL_BIO,
         CONTRACT_DOMESTIC,
         DRIVER_LICENSE,
         'إحضار رخصة السياقة الأصلية والنافذة',
@@ -200,8 +195,7 @@
         SECURITY,
         FEMALE_PERMISSION,
         SCHOOL,
-        MEDICAL,
-        PASSPORT_NEW,
+        MEDICAL_BIO,
         CONTRACT_DOMESTIC,
         VACCINE,
         AUTH
@@ -215,8 +209,7 @@
         SECURITY,
         MILITARY_FULL,
         SCHOOL,
-        MEDICAL,
-        PASSPORT_NEW,
+        MEDICAL_BIO,
         CONTRACT_DOMESTIC,
         VACCINE,
         AUTH
@@ -228,7 +221,7 @@
       reqs: [
         SECURITY, MILITARY, DEGREE,
         'خبرة لمدة سنة على الأقل',
-        MEDICAL, CONTRACT, VACCINE, BIO, AUTH, PASSPORT, ATTEST
+        MEDICAL_BIO, CONTRACT, VACCINE, AUTH, ATTEST
       ]
     },
     // === UNIVERSAL SAFE FALLBACK ===
@@ -240,11 +233,10 @@
       reqs: [
         SECURITY,
         MILITARY,
-        MEDICAL,
+        MEDICAL_BIO,
         VACCINE,
         CONTRACT,
         AUTH,
-        PASSPORT,
         ATTEST,
         'ملاحظة هامة جداً: هذه قائمة المتطلبات الأساسية لتأشيرة العمل السعودية. للحصول على القائمة الدقيقة لمهنتك المحددة، يرجى التواصل معنا عبر واتساب وسنرسل لك التفاصيل الإضافية (شهادات/تصديقات/اختبارات) خلال 15 دقيقة.'
       ]
@@ -342,7 +334,7 @@
     // 🛒 Direct Sales — Secondary school + NO experience + NO QVP
     {
       id: 'direct_sales', template: 'direct_sales', tier: 'vocational',
-      keywords: ['بائع مباشر', 'بائعة مباشرة', 'بائعه مباشره']
+      keywords: ['بائع مباشر', 'بائعة مباشرة', 'بائعه مباشره', 'بائع', 'منسق زهور']
     },
     {
       id: 'specialist', template: 'specialist', tier: 'management',
@@ -868,11 +860,9 @@
       });
     });
 
-    // 📍 Anchor scroll: smoothly scroll the document layout block into view.
-    //    Scrolls both the page (to surface the modal) AND the modal body to top.
+    // 📍 No scroll jumping: only scroll the modal content to top, not the main page.
     setTimeout(() => {
       const modal = document.getElementById('generated-sheet-modal');
-      if (modal) modal.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const body  = modal && modal.querySelector('.overflow-y-auto');
       if (body) body.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
