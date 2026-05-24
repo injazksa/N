@@ -538,6 +538,13 @@
     const norm = normalize(userTitle);
     if (!norm) return { valid: false, reason: 'empty' };
     if (norm.length < 3) return { valid: false, reason: 'too_short' };
+    
+    // Block generic titles that need more specificity
+    const genericTitles = ['مهندس', 'مهندسه', 'مدير', 'مديره', 'اخصائي', 'اخصائيه', 'فني', 'فنيه', 'مشرف', 'مشرفه', 'مندوب', 'مندوبه'];
+    if (genericTitles.includes(norm)) {
+        return { valid: false, reason: 'generic_title' };
+    }
+
     // Reject pure numeric / punctuation
     if (!/[\u0600-\u06FFa-z]/.test(norm)) return { valid: false, reason: 'no_letters' };
 
@@ -616,20 +623,20 @@
       </button>
 
       <!-- 🛡️ Validation error (hidden by default) -->
-      <div id="smart-fallback-error" class="hidden mt-3 bg-amber-50 border-2 border-amber-300 text-amber-900 rounded-xl p-3 sm:p-4 text-sm sm:text-base"
-           data-testid="smart-fallback-error" role="alert">
-        <div class="flex items-start gap-2 sm:gap-3">
-          <i class="fas fa-exclamation-triangle text-amber-600 text-lg mt-0.5 flex-shrink-0"></i>
-          <div class="flex-1">
-            <p class="font-bold mb-1">هذا لا يبدو كاسم مهنة معتمدة</p>
-            <p class="text-xs sm:text-sm leading-relaxed">يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>). إذا كنت متأكد من المسمى، تواصل معنا مباشرة عبر واتساب للتحقق.</p>
-            <a href="https://wa.me/962789881009?text=أريد%20التحقق%20من%20مسمى%20مهنة" target="_blank" rel="noopener"
-               class="mt-2 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-green-700 hover:text-green-800 transition">
-              <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
-            </a>
-          </div>
-        </div>
-      </div>
+	      <div id="smart-fallback-error" class="hidden mt-3 bg-amber-50 border-2 border-amber-300 text-amber-900 rounded-xl p-3 sm:p-4 text-sm sm:text-base"
+	           data-testid="smart-fallback-error" role="alert">
+	        <div class="flex items-start gap-2 sm:gap-3">
+	          <i class="fas fa-exclamation-triangle text-amber-600 text-lg mt-0.5 flex-shrink-0"></i>
+	          <div class="flex-1">
+	            <p id="error-title" class="font-bold mb-1">هذا لا يبدو كاسم مهنة معتمدة</p>
+	            <p id="error-desc" class="text-xs sm:text-sm leading-relaxed">يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>). إذا كنت متأكد من المسمى، تواصل معنا مباشرة عبر واتساب للتحقق.</p>
+	            <a href="https://wa.me/962789881009?text=أريد%20التحقق%20من%20مسمى%20مهنة" target="_blank" rel="noopener"
+	               class="mt-2 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-green-700 hover:text-green-800 transition">
+	              <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
+	            </a>
+	          </div>
+	        </div>
+	      </div>
     `;
 
     // Insert AFTER the quick-bar (which is right under search)
@@ -711,6 +718,15 @@
     if (!check.valid) {
       input.classList.add('border-red-500');
       if (errorBox) {
+        const errorTitle = document.getElementById('error-title');
+        const errorDesc = document.getElementById('error-desc');
+        if (check.reason === 'generic_title') {
+            errorTitle.innerText = 'يرجى تحديد التخصص بدقة';
+            errorDesc.innerHTML = 'لقد كتبت مسمى عاماً جداً (مثل مهندس أو مدير). يرجى كتابة المسمى الكامل كما هو في التأشيرة (مثلاً: <strong>مهندس كهرباء</strong> أو <strong>مدير مبيعات</strong>).';
+        } else {
+            errorTitle.innerText = 'هذا لا يبدو كاسم مهنة معتمدة';
+            errorDesc.innerHTML = 'يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>).';
+        }
         errorBox.classList.remove('hidden');
         setTimeout(() => errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
       }
@@ -743,21 +759,18 @@
 
     currentGenerated = { userTitle, template, match, gender };
 
-    const html = `
-      <div id="generated-sheet-modal" class="fixed inset-0 z-50 overflow-y-auto" data-testid="generated-sheet-modal" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" id="generated-sheet-overlay"></div>
-
-        <!-- 🔴 CLOSE BUTTON: top-level fixed, highest z-index, always clickable -->
-        <button id="generated-sheet-close" type="button"
-          class="fixed top-3 left-3 sm:top-4 sm:left-4 w-12 h-12 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-white shadow-xl hover:bg-gray-100 active:bg-gray-200 text-navy text-2xl transition-all touch-manipulation"
-          style="pointer-events:auto; z-index: 9999;"
-          data-testid="generated-sheet-close"
-          aria-label="إغلاق">
-          <i class="fas fa-times pointer-events-none"></i>
-        </button>
-
-        <div class="flex items-end sm:items-center justify-center min-h-screen px-2 sm:px-4 pt-2 pb-2 sm:p-0 relative">
-          <div class="relative inline-block w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden text-right my-2 sm:my-8" dir="rtl">
+	    const html = `
+	      <div id="generated-sheet-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" data-testid="generated-sheet-modal" role="dialog" aria-modal="true">
+	        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" id="generated-sheet-overlay"></div>
+	
+	        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" dir="rtl">
+	            <!-- 🔴 CLOSE BUTTON: inside modal for better mobile visibility -->
+	            <button id="generated-sheet-close" type="button"
+	              class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white text-xl z-50 transition-all"
+	              data-testid="generated-sheet-close"
+	              aria-label="إغلاق">
+	              <i class="fas fa-times"></i>
+	            </button>
             <!-- Header -->
             <div class="bg-gradient-to-l from-navy to-navy/90 text-white p-4 sm:p-6 relative">
               <div class="pl-14 sm:pl-14">
