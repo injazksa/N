@@ -763,16 +763,16 @@
 	      <div id="generated-sheet-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" data-testid="generated-sheet-modal" role="dialog" aria-modal="true">
 	        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" id="generated-sheet-overlay"></div>
 	
-	        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" dir="rtl">
-	            <!-- 🔴 CLOSE BUTTON: inside modal for better mobile visibility -->
+	        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]" dir="rtl">
+	            <!-- 🔴 CLOSE BUTTON: fixed at top-left of the modal container -->
 	            <button id="generated-sheet-close" type="button"
-	              class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white text-xl z-50 transition-all"
+	              class="absolute top-3 left-3 sm:top-4 sm:left-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white text-xl z-[100] transition-all"
 	              data-testid="generated-sheet-close"
 	              aria-label="إغلاق">
 	              <i class="fas fa-times"></i>
 	            </button>
-            <!-- Header -->
-            <div class="bg-gradient-to-l from-navy to-navy/90 text-white p-4 sm:p-6 relative">
+	            <!-- Header -->
+	            <div class="bg-gradient-to-l from-navy to-navy/90 text-white p-5 sm:p-8 relative">
               <div class="pl-14 sm:pl-14">
                 <div class="inline-flex items-center gap-2 bg-gold/20 text-gold px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold mb-2">
                   <i class="fas ${template.icon}"></i>
@@ -802,8 +802,8 @@
               `}
             </div>
 
-            <!-- Body -->
-            <div class="p-4 sm:p-6 max-h-[55vh] sm:max-h-[60vh] overflow-y-auto">
+	            <!-- Body -->
+	            <div class="p-4 sm:p-8 flex-1 overflow-y-auto scrolling-touch">
               <h3 class="text-base sm:text-lg font-bold text-navy mb-3 sm:mb-4 flex items-center gap-2">
                 <i class="fas fa-clipboard-list text-gold"></i>
                 الأوراق والمستندات المطلوبة:
