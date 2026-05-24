@@ -764,10 +764,10 @@
     currentGenerated = { userTitle, template, match, gender };
 
 	    const html = `
-	      <div id="generated-sheet-modal" class="fixed inset-0 z-[9999] flex items-start justify-center p-4 sm:p-6 overflow-y-auto" data-testid="generated-sheet-modal" role="dialog" aria-modal="true">
+	      <div id="generated-sheet-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" data-testid="generated-sheet-modal" role="dialog" aria-modal="true">
 	        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" id="generated-sheet-overlay"></div>
 	
-	        <div style="margin-top: 15vh;" class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col mb-20" dir="rtl">
+	        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]" dir="rtl">
 	            <!-- 🔴 CLOSE BUTTON: fixed at top-left of the modal container -->
 	            <button id="generated-sheet-close" type="button"
 	              class="absolute top-3 left-3 sm:top-4 sm:left-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white text-xl z-[100] transition-all"

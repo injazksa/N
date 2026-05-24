@@ -494,5 +494,19 @@
  <script src="/security.js" defer></script>
 
  <script src="/js/config-loader.js" defer></script>
+
+ <!-- Floating Navigation Buttons -->
+ <div class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 print:hidden">
+     <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="للأعلى" class="w-12 h-12 bg-navy text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-navy-dark transition-all hover:-translate-y-1">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+     <button onclick="window.scrollTo({top: document.body.scrollHeight / 2, behavior: 'smooth'})" title="للمنتصف" class="w-12 h-12 bg-gold text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-gold-light transition-all hover:-translate-y-1">
+         <i class="fas fa-arrows-up-down"></i>
+     </button>
+     <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" title="للأسفل" class="w-12 h-12 bg-navy text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-navy-dark transition-all hover:-translate-y-1">
+         <i class="fas fa-arrow-down"></i>
+     </button>
+ </div>
+
 </body>
 </html>
