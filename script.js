@@ -1,339 +1,8 @@
-// Modern Saudi Visa Website - JavaScript
-
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
- 
- // ======================
- // Mobile Menu Toggle
- // ======================
- const mobileMenuBtn = document.getElementById('mobile-menu-btn');
- const mobileMenu = document.getElementById('mobile-menu');
- 
- if (mobileMenuBtn && mobileMenu && mobileMenuBtn.dataset.menuInit !== '1') {
- mobileMenuBtn.dataset.menuInit = '1';
- mobileMenuBtn.addEventListener('click', function(e) {
- e.stopPropagation();
- mobileMenu.classList.toggle('hidden');
- });
- 
- // Close mobile menu when clicking on a link
- const mobileMenuLinks = mobileMenu.querySelectorAll('a');
- mobileMenuLinks.forEach(link => {
- link.addEventListener('click', function() {
- mobileMenu.classList.add('hidden');
- });
- });
- }
- 
- // ======================
- // FAQ Accordion
- // ======================
- const faqQuestions = document.querySelectorAll('.faq-question');
- 
- faqQuestions.forEach(question => {
- question.addEventListener('click', function() {
- const faqItem = this.parentElement;
- const answer = faqItem.querySelector('.faq-answer');
- const icon = this.querySelector('i');
- 
- // Close all other items
- document.querySelectorAll('.faq-answer').forEach(item => {
- if (item !== answer) {
- item.classList.remove('active');
- item.classList.add('hidden');
- }
- });
- 
- document.querySelectorAll('.faq-question i').forEach(i => {
- if (i !== icon) {
- i.classList.remove('rotate-180');
- }
- });
- 
- // Toggle current item
- answer.classList.toggle('hidden');
- answer.classList.toggle('active');
- icon.classList.toggle('rotate-180');
- });
- });
- 
- // ======================
- // Smooth Scroll for Anchor Links
- // ======================
- document.querySelectorAll('a[href^="#"]').forEach(anchor => {
- anchor.addEventListener('click', function (e) {
- const href = this.getAttribute('href');
- if (href !== '#' && href !== '') {
- e.preventDefault();
- const target = document.querySelector(href);
- if (target) {
- target.scrollIntoView({
- behavior: 'smooth',
- block: 'start'
- });
- }
- }
- });
- });
- 
- // ======================
- // Load Blog Posts (Homepage)
- // ======================
- const blogPostsContainer = document.getElementById('blog-posts');
- 
- if (blogPostsContainer) {
- fetch('blog/posts.json')
- .then(response => response.json())
- .then(posts => {
- blogPostsContainer.innerHTML = '';
- 
- // Show only first 3 posts on homepage
- const postsToShow = posts.slice(0, 3);
- 
- postsToShow.forEach(post => {
- const postCard = createBlogCard(post);
- blogPostsContainer.innerHTML += postCard;
- });
- })
- .catch(error => {
- console.error('Error loading blog posts:', error);
- blogPostsContainer.innerHTML = `
- <div class="col-span-full text-center text-gray-500 py-12">
- <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
- <p>عذراً، حدث خطأ في تحميل المقالات</p>
- </div>
- `;
- });
- }
- 
- // ======================
- // Navbar Scroll Effect
- // ======================
- const navbar = document.querySelector('header');
- let lastScroll = 0;
- 
- window.addEventListener('scroll', () => {
- const currentScroll = window.pageYOffset;
- 
- if (currentScroll > 100) {
- navbar.classList.add('shadow-lg');
- } else {
- navbar.classList.remove('shadow-lg');
- }
- 
- lastScroll = currentScroll;
- });
- 
- // ======================
- // Animate Elements on Scroll
- // ======================
- const observerOptions = {
- threshold: 0.1,
- rootMargin: '0px 0px -50px 0px'
- };
- 
- const observer = new IntersectionObserver(entries => {
- entries.forEach(entry => {
- if (entry.isIntersecting) {
- entry.target.style.opacity = '1';
- entry.target.style.transform = 'translateY(0)';
- }
- });
- }, observerOptions);
- 
- // Observe service cards and other elements
- document.querySelectorAll('.service-card, .review-card, .blog-card').forEach(el => {
- el.style.opacity = '0';
- el.style.transform = 'translateY(20px)';
- el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
- observer.observe(el);
- });
- 
- // ======================
- // Back to Top Button
- // ======================
- const backToTopBtn = document.createElement('button');
- backToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
- backToTopBtn.className = 'fixed bottom-24 left-6 z-40 w-12 h-12 bg-navy hover:bg-navy-dark text-white rounded-full shadow-2xl opacity-0 pointer-events-none transition-all duration-300';
- backToTopBtn.setAttribute('aria-label', 'العودة للأعلى');
- document.body.appendChild(backToTopBtn);
- 
- window.addEventListener('scroll', () => {
- if (window.pageYOffset > 500) {
- backToTopBtn.style.opacity = '1';
- backToTopBtn.style.pointerEvents = 'auto';
- } else {
- backToTopBtn.style.opacity = '0';
- backToTopBtn.style.pointerEvents = 'none';
- }
- });
- 
- backToTopBtn.addEventListener('click', () => {
- window.scrollTo({
- top: 0,
- behavior: 'smooth'
- });
- });
- 
-});
-
-// ======================
-// Helper Functions
-// ======================
-
-// Create Blog Card HTML
-function createBlogCard(post) {
- const date = new Date(post.date).toLocaleDateString('ar-SA', {
- year: 'numeric',
- month: 'long',
- day: 'numeric'
- });
- 
- return `
- <article class="blog-card bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 hover:border-gold/30 transition-all" data-testid="blog-post-${post.slug}">
- <div class="overflow-hidden">
- <img src="${post.image || 'images/default-blog.webp'}" 
- alt="${post.title}" 
- class="w-full h-48 object-cover">
- </div>
- <div class="p-6">
- <div class="flex items-center gap-3 text-sm text-gray-500 mb-3">
- <span class="flex items-center gap-1">
- <i class="far fa-calendar"></i>
- ${date}
- </span>
- ${post.author ? `
- <span class="flex items-center gap-1">
- <i class="far fa-user"></i>
- ${post.author}
- </span>
- ` : ''}
- </div>
- <h3 class="text-xl font-bold text-navy mb-3 line-clamp-2 hover:text-gold transition-colors">
- ${post.title}
- </h3>
- <p class="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
- ${post.description || post.excerpt || ''}
- </p>
- <a href="post.html?id=${post.slug}" 
- class="inline-flex items-center text-gold font-semibold hover:gap-3 transition-all"
- data-testid="blog-read-more-${post.slug}">
- اقرأ المزيد
- <i class="fas fa-arrow-left mr-2"></i>
- </a>
- </div>
- </article>
- `;
-}
-
-// Format Date in Arabic
-function formatDateArabic(dateString) {
- const date = new Date(dateString);
- return date.toLocaleDateString('ar-SA', {
- year: 'numeric',
- month: 'long',
- day: 'numeric'
- });
-}
-
-// Show Loading Spinner
-function showLoader(container) {
- container.innerHTML = `
- <div class="flex items-center justify-center py-12">
- <div class="loader"></div>
- </div>
- `;
-}
-
-// Show Error Message
-function showError(container, message) {
- container.innerHTML = `
- <div class="error-message text-center">
- <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
- <p>${message}</p>
- </div>
- `;
-}
-
-// Show Success Message
-function showSuccess(container, message) {
- container.innerHTML = `
- <div class="success-message text-center">
- <i class="fas fa-check-circle text-3xl mb-3"></i>
- <p>${message}</p>
- </div>
- `;
-}
-
-// Debounce Function
-function debounce(func, wait) {
- let timeout;
- return function executedFunction(...args) {
- const later = () => {
- clearTimeout(timeout);
- func(...args);
- };
- clearTimeout(timeout);
- timeout = setTimeout(later, wait);
- };
-}
-
-// Search Highlight
-function highlightText(text, query) {
- if (!query) return text;
- const regex = new RegExp(`(${query})`, 'gi');
- return text.replace(regex, '<span class="search-highlight">$1</span>');
-}
-
-// Copy to Clipboard
-function copyToClipboard(text) {
- if (navigator.clipboard) {
- navigator.clipboard.writeText(text).then(() => {
- showToast('تم النسخ بنجاح');
- });
- } else {
- // Fallback for older browsers
- const textArea = document.createElement('textarea');
- textArea.value = text;
- document.body.appendChild(textArea);
- textArea.select();
- document.execCommand('copy');
- document.body.removeChild(textArea);
- showToast('تم النسخ بنجاح');
- }
-}
-
-// Show Toast Notification
-function showToast(message, duration = 3000) {
- const toast = document.createElement('div');
- toast.className = 'fixed top-24 right-6 bg-navy text-white px-6 py-3 rounded-lg shadow-2xl z-50 transform transition-all duration-300 translate-x-full';
- toast.innerHTML = `
- <div class="flex items-center gap-3">
- <i class="fas fa-check-circle text-gold"></i>
- <span>${message}</span>
- </div>
- `;
- 
- document.body.appendChild(toast);
- 
- setTimeout(() => {
- toast.style.transform = 'translateX(0)';
- }, 100);
- 
- setTimeout(() => {
- toast.style.transform = 'translateX(full)';
- setTimeout(() => {
- document.body.removeChild(toast);
- }, 300);
- }, duration);
-}
-
 // Print Function for Profession Documents
 function printProfessionDocument(professionCode, professionName, requirements) {
  // Create a new window for printing
  const printWindow = window.open('', '_blank');
  
-  const isCompact = requirements.length > 8;
   const printContent = `
 	 <!DOCTYPE html>
 	 <html lang="ar" dir="rtl">
@@ -343,7 +12,7 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 		 <style>
 			 @page {
 			 size: A4;
-			 margin: 8mm 12mm;
+			 margin: 6mm 10mm;
 			 }
 		 * { 
 			box-sizing: border-box; 
@@ -355,11 +24,11 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 		 font-family: 'Arial', sans-serif;
 		 direction: rtl;
 		 text-align: right;
-			 line-height: ${isCompact ? '1.5' : '1.7'};
+			 line-height: 1.15;
 			 color: #1e293b;
 			 margin: 0;
 			 padding: 0;
-			 font-size: ${isCompact ? '13px' : '14px'};
+			 font-size: 12px;
 		 }
 		 .print-container {
 		 width: 100%;
@@ -371,73 +40,76 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 		 }
 		 .print-header {
 		 text-align: center;
-		 margin-bottom: ${isCompact ? '20px' : '35px'};
-		 padding-bottom: ${isCompact ? '12px' : '20px'};
-		 border-bottom: 3px solid #C9A26A;
+		 margin-bottom: 12px;
+		 padding-bottom: 8px;
+		 border-bottom: 2px solid #C9A26A;
 		 }
 		 .print-header h1 {
 		 color: #1B2A41;
-		 font-size: ${isCompact ? '24px' : '28px'};
-		 margin: 0 0 5px 0;
+		 font-size: 20px;
+		 margin: 0 0 2px 0;
+		 font-weight: bold;
 		 }
 		 .print-header .subtitle {
 		 color: #C9A26A;
-		 font-size: ${isCompact ? '16px' : '18px'};
+		 font-size: 13px;
 		 font-weight: bold;
-		 margin-bottom: 10px;
+		 margin-bottom: 4px;
 		 }
 		 .office-info {
 		 color: #475569;
-		 font-size: ${isCompact ? '11px' : '13px'};
-		 line-height: 1.5;
+		 font-size: 10px;
+		 line-height: 1.3;
 		 }
 		 .document-title {
 		 background: #1B2A41;
 		 color: white;
-		 padding: ${isCompact ? '10px' : '14px'};
-		 margin: ${isCompact ? '15px 0' : '20px 0'};
-		 border-radius: 8px;
-		 font-size: ${isCompact ? '18px' : '20px'};
+		 padding: 8px 10px;
+		 margin: 8px 0;
+		 border-radius: 4px;
+		 font-size: 14px;
 		 font-weight: bold;
 		 text-align: center;
-		 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		 box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 		 }
 		 .profession-info {
 		 background: #f8fafc;
-		 padding: 10px 15px;
-		 margin: ${isCompact ? '10px 0' : '15px 0'};
-		 border-right: 5px solid #C9A26A;
-		 border-radius: 4px;
-		 font-size: ${isCompact ? '13px' : '14px'};
+		 padding: 6px 10px;
+		 margin: 6px 0;
+		 border-right: 3px solid #C9A26A;
+		 border-radius: 3px;
+		 font-size: 11px;
 		 display: flex;
 		 justify-content: space-between;
 		 align-items: center;
+		 flex-wrap: wrap;
 		 }
 		 .requirements-list {
-		 margin: ${isCompact ? '15px 0' : '25px 0'};
-		 padding-right: 30px;
+		 margin: 8px 0;
+		 padding-right: 20px;
 		 flex-grow: 1;
 		 }
 		 .requirements-list li {
-		 padding: ${isCompact ? '10px 0' : '15px 0'};
-		 border-bottom: 1px solid #f1f5f9;
+		 padding: 4px 0;
+		 border-bottom: 0.5px solid #e8eef7;
+		 margin-bottom: 2px;
 		 }
 		 .requirements-list li:last-child { border-bottom: none; }
 		 .footer {
 		 margin-top: auto;
-		 padding-top: 20px;
-		 border-top: 2px solid #e2e8f0;
+		 padding-top: 8px;
+		 border-top: 1px solid #e2e8f0;
 		 text-align: center;
 		 color: #64748b;
-		 font-size: 11px;
+		 font-size: 9px;
 		 }
-		 .footer p { margin: 4px 0; }
+		 .footer p { margin: 2px 0; }
 		 h2 { 
 		 color: #1B2A41; 
-		 margin: ${isCompact ? '15px 0 8px' : '25px 0 15px'}; 
-		 font-size: ${isCompact ? '17px' : '19px'};
-		 border-bottom: 1px solid #e2e8f0;
-		 padding-bottom: 5px;
+		 margin: 6px 0 4px; 
+		 font-size: 13px;
+		 border-bottom: 0.5px solid #e2e8f0;
+		 padding-bottom: 2px;
 		 }
 	 </style>
 	 </head>
@@ -473,9 +145,9 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 			 </ol>
 
 		 ${(!requirements.some(r => r.includes('الاعتماد المهني')) && !professionName.includes('استقدام') && !professionName.includes('اقامة')) ? `
-		 <div style="margin-top: 15px; padding: 10px; background-color: #f0f7ff; border-right: 4px solid #3b82f6; border-radius: 4px;">
-			 <div style="font-weight: bold; color: #1e40af; font-size: 11pt; margin-bottom: 5px;">تنبيه بخصوص الاعتماد المهني</div>
-			 <div style="color: #1e3a8a; font-size: 10pt; line-height: 1.4;">هذه المهنة لا تتطلب اختبار اعتماد مهني حالياً، ولكن يرجى العلم أنه قد يتم تفعيل شرط الاعتماد في أي وقت حسب تحديثات الأنظمة السعودية.</div>
+		 <div style="margin-top: 6px; padding: 6px; background-color: #f0f7ff; border-right: 2px solid #3b82f6; border-radius: 3px;">
+			 <div style="font-weight: bold; color: #1e40af; font-size: 9pt; margin-bottom: 2px;">تنبيه بخصوص الاعتماد المهني</div>
+			 <div style="color: #1e3a8a; font-size: 8pt; line-height: 1.2;">هذه المهنة لا تتطلب اختبار اعتماد مهني حالياً، ولكن يرجى العلم أنه قد يتم تفعيل شرط الاعتماد في أي وقت حسب تحديثات الأنظمة السعودية.</div>
 		 </div>
 		 ` : ''}
 		 
@@ -496,261 +168,3 @@ function printProfessionDocument(professionCode, professionName, requirements) {
  printWindow.print();
  };
 }
-
-// Export functions for use in other files
-if (typeof module !== 'undefined' && module.exports) {
- module.exports = {
- createBlogCard,
- formatDateArabic,
- showLoader,
- showError,
- showSuccess,
- debounce,
- highlightText,
- copyToClipboard,
- showToast,
- printProfessionDocument
- };
-}
-
-// ======================
-// HERO SLIDER
-// ======================
-(function() {
- const slides = document.querySelectorAll('.hero-slide');
- const dots = document.querySelectorAll('.slider-dot');
- 
- // Only run if slider elements exist
- if (slides.length === 0 || dots.length === 0) {
- return;
- }
- 
- let currentSlide = 0;
- const slideInterval = 5000; // 5 seconds
-
- function showSlide(index) {
- // Remove active class from all slides and dots
- slides.forEach(slide => slide.classList.remove('active'));
- dots.forEach(dot => dot.classList.remove('active'));
- 
- // Add active class to current slide and dot
- if (slides[index] && dots[index]) {
- slides[index].classList.add('active');
- dots[index].classList.add('active');
- }
- }
-
- function nextSlide() {
- currentSlide = (currentSlide + 1) % slides.length;
- showSlide(currentSlide);
- }
-
- // Auto advance slides
- let autoSlide = setInterval(nextSlide, slideInterval);
-
- // Dot click handlers
- dots.forEach((dot, index) => {
- dot.addEventListener('click', () => {
- currentSlide = index;
- showSlide(currentSlide);
- // Reset auto advance
- clearInterval(autoSlide);
- autoSlide = setInterval(nextSlide, slideInterval);
- });
- });
-
- // Pause on hover
- const heroSection = document.querySelector('#home');
- if (heroSection) {
- heroSection.addEventListener('mouseenter', () => {
- clearInterval(autoSlide);
- });
-
- heroSection.addEventListener('mouseleave', () => {
- autoSlide = setInterval(nextSlide, slideInterval);
- });
- }
-})();
-
-// ======================
-// SCROLL ANIMATIONS
-// ======================
-(function() {
- const observerOptions = {
- threshold: 0.1,
- rootMargin: '0px 0px -50px 0px'
- };
-
- const observer = new IntersectionObserver((entries) => {
- entries.forEach(entry => {
- if (entry.isIntersecting) {
- entry.target.classList.add('fade-in-up');
- observer.unobserve(entry.target);
- }
- });
- }, observerOptions);
-
- // Observe all sections
- const sections = document.querySelectorAll('section:not(#home)');
- if (sections.length > 0) {
- sections.forEach(section => {
- observer.observe(section);
- });
- }
-
- // Observe all cards
- const cards = document.querySelectorAll('.card-3d, .blog-card');
- if (cards.length > 0) {
- cards.forEach((card, index) => {
- card.style.animationDelay = `${index * 0.1}s`;
- observer.observe(card);
- });
- }
-})();
-
-// ======================
-// SMOOTH SCROLL FOR ANCHOR LINKS
-// ======================
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
- anchor.addEventListener('click', function (e) {
- const href = this.getAttribute('href');
- if (href !== '#' && href.length > 1) {
- e.preventDefault();
- const target = document.querySelector(href);
- if (target) {
- target.scrollIntoView({
- behavior: 'smooth',
- block: 'start'
- });
- }
- }
- });
-});
-
-// ======================
-// PARALLAX EFFECT ON HERO - Fixed for RTL
-// ======================
-(function() {
- const heroSection = document.querySelector('#home');
- 
- if (heroSection) {
- window.addEventListener('scroll', () => {
- const scrolled = window.pageYOffset;
- const parallaxSpeed = 0.3;
- 
- const slides = heroSection.querySelectorAll('.hero-slide img');
- slides.forEach(slide => {
- // Only use translateY to avoid horizontal overflow
- slide.style.transform = `translateY(${scrolled * parallaxSpeed}px)`;
- });
- });
- }
-})();
-
-// ======================
-// ADD HOVER EFFECTS TO BUTTONS
-// ======================
-(function() {
- const buttons = document.querySelectorAll('a[href], button');
- 
- buttons.forEach(button => {
- // Add ripple class
- if (!button.classList.contains('slider-dot')) {
- button.classList.add('ripple');
- }
- });
-})();
-
-// ======================
-// NAVBAR BACKGROUND ON SCROLL
-// ======================
-(function() {
- const nav = document.querySelector('nav');
- 
- if (nav) {
- window.addEventListener('scroll', () => {
- if (window.scrollY > 100) {
- nav.classList.add('shadow-xl');
- nav.style.background = 'rgba(255, 255, 255, 0.98)';
- } else {
- nav.classList.remove('shadow-xl');
- nav.style.background = 'white';
- }
- });
- }
-})();
-
-// ======================
-// ANIMATED COUNTERS (for Stats)
-// ======================
-(function() {
- const stats = document.querySelectorAll('.text-3xl, .text-4xl');
- 
- const animateCounter = (element) => {
- const target = parseInt(element.textContent.replace(/\D/g, ''));
- if (isNaN(target)) return;
- 
- const duration = 2000;
- const step = target / (duration / 16);
- let current = 0;
- 
- const updateCounter = () => {
- current += step;
- if (current < target) {
- element.textContent = Math.floor(current) + '+';
- requestAnimationFrame(updateCounter);
- } else {
- element.textContent = target + '+';
- }
- };
- 
- updateCounter();
- };
- 
- const observer = new IntersectionObserver((entries) => {
- entries.forEach(entry => {
- if (entry.isIntersecting) {
- const text = entry.target.textContent;
- if (text.includes('+')) {
- animateCounter(entry.target);
- observer.unobserve(entry.target);
- }
- }
- });
- }, { threshold: 0.5 });
- 
- stats.forEach(stat => observer.observe(stat));
-})();
-
-console.log('🚀 Modern Animations & Interactions loaded successfully!');
-
-// ==========================================
-// INSTANT PAGE TRANSITIONS (Turbo-like)
-// ==========================================
-(function() {
- // Prefetch links on hover for instant navigation
- const prefetchedLinks = new Set();
- 
- document.addEventListener('mouseover', (e) => {
- const link = e.target.closest('a[href]');
- if (link && link.hostname === window.location.hostname && !prefetchedLinks.has(link.href)) {
- const prefetch = document.createElement('link');
- prefetch.rel = 'prefetch';
- prefetch.href = link.href;
- document.head.appendChild(prefetch);
- prefetchedLinks.add(link.href);
- }
- });
- 
- // Disable transitions during scroll for smoothness
- let scrollTimer;
- window.addEventListener('scroll', () => {
- document.body.classList.add('disable-transitions');
- clearTimeout(scrollTimer);
- scrollTimer = setTimeout(() => {
- document.body.classList.remove('disable-transitions');
- }, 100);
- }, { passive: true });
- 
-})();
-

@@ -61,15 +61,17 @@
       ]
     },
     executive: {
-      label: 'مسار المستثمر / المدير العام',
+      label: 'مسار الرئيس التنفيذي / مدير عام / مستثمر (سيادي)',
       icon: 'fa-crown',
-      genderLocked: true,
       reqs: [
         SECURITY,
-        'السجل التجاري السعودي ورخصة الاستثمار (يكون الاسم ظاهر بالسجل التجاري)',
-        'التفويض من هيئة الاستثمار',
-        MEDICAL_BIO, VACCINE, AUTH,
-        'ملاحظة هامة جداً: يستخدم هذا المسار للمستثمرين والمدراء التنفيذيين الذين يملكون أو يديرون كياناً رسمياً في السعودية. لا يلزم خدمة العلم أو الاعتماد المهني لهذا المستوى.'
+        MILITARY,
+        MEDICAL_BIO,
+        CONTRACT,
+        VACCINE,
+        AUTH,
+        ATTEST,
+        'ملاحظة هامة جداً: هذه الفئة للمستثمرين والمدراء التنفيذيين ورؤساء المجالس فقط. بدون اعتماد مهني.'
       ]
     },
     medical: {
@@ -324,12 +326,7 @@
     // (Executive subgroup uses commercial track / no military)
     {
       id: 'executive', template: 'executive', tier: 'management',
-      keywords: [
-        'رئيس تنفيذي', 'رئيس مجلس إدارة', 'رئيس مجلس ادارة', 'رئيس مجلس',
-        'مدير عام', 'مدير عمليات', 'مدير شريك', 'شريك مؤسس', 'مؤسس',
-        'نائب رئيس تنفيذي', 'نائب مدير عام',
-        'ceo', 'cfo', 'cto', 'coo', 'مستثمر', 'رئيس شركة'
-      ]
+      keywords: ['رئيس تنفيذي', 'ceo', 'مدير عام', 'مستثمر']
     },
     // 🏗️ ENGINEERING SECTOR — STRICT RULE (BEFORE specialist so "مهندس" routes here)
     // Already defined at compliance tier above — this duplicate is intentionally removed.
@@ -371,6 +368,13 @@
     },
 
     // ─── TIER 3: VOCATIONAL / TRADE / LABOR ───
+    {
+      id: 'labor_no_qvp', template: 'labor_no_qvp', tier: 'vocational',
+      keywords: [
+        'عامل وضع ملصقات', 'ملصقات',
+        'عامل تنظيف خزانات مياه', 'تنظيف خزانات'
+      ]
+    },
     {
       id: 'labor', template: 'labor', tier: 'vocational',
       keywords: [

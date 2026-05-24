@@ -3,6 +3,7 @@ let filteredData = [];
 let renderedCount = 0;
 const BATCH_SIZE = 30;
 let currentProfession = null;
+let professionModalScrollY = 0; // ✅ حفظ موضع التمرير عند فتح النافذة
 
 // Load professions data on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -550,13 +551,21 @@ function showProfessionDetails(profession) {
     currentProfession = { ...profession, requirements };
     
     const modal = document.getElementById('professionModal');
+    professionModalScrollY = window.scrollY || document.documentElement.scrollTop || 0; // ✅ حفظ موضع التمرير
     modal.classList.remove('hidden');
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${professionModalScrollY}px`;
+    document.body.style.width = '100%';
     document.body.style.overflow = 'hidden';
 }
 
 function closeProfessionModal() {
     document.getElementById('professionModal').classList.add('hidden');
-    document.body.style.overflow = 'auto';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    window.scrollTo({ top: professionModalScrollY, left: 0, behavior: 'instant' }); // ✅ استعادة موضع التمرير
 }
 
 function debounce(func, wait) {
