@@ -96,10 +96,10 @@ html, body {
 
 /* Print Styles for PDF Generation */
 @media print {
- @page {
- size: A4;
- margin: 20mm;
- }
+	 @page {
+	 size: A4;
+	 margin: 10mm;
+	 }
  
  body {
  background: white;
@@ -392,6 +392,14 @@ iframe {
  height: auto;
  border-radius: 12px;
  margin: 1.5rem 0;
+}
+
+/* Modal Fixes */
+body.modal-open {
+    overflow: hidden !important;
+    height: 100vh !important;
+    position: fixed !important;
+    width: 100% !important;
 }
 
 /* Badge Styles */

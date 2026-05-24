@@ -341,10 +341,10 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 	 <meta charset="UTF-8">
 	 <title>الأوراق المطلوبة - ${professionName}</title>
 		 <style>
-		 @page {
-		 size: A4;
-		 margin: 10mm 15mm;
-		 }
+			 @page {
+			 size: A4;
+			 margin: 8mm 12mm;
+			 }
 		 * { 
 			box-sizing: border-box; 
 			-webkit-print-color-adjust: exact !important;
@@ -355,11 +355,11 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 		 font-family: 'Arial', sans-serif;
 		 direction: rtl;
 		 text-align: right;
-		 line-height: ${isCompact ? '1.7' : '2.0'};
-		 color: #1e293b;
-		 margin: 0;
-		 padding: 0;
-		 font-size: ${isCompact ? '14px' : '16px'};
+			 line-height: ${isCompact ? '1.5' : '1.7'};
+			 color: #1e293b;
+			 margin: 0;
+			 padding: 0;
+			 font-size: ${isCompact ? '13px' : '14px'};
 		 }
 		 .print-container {
 		 width: 100%;
