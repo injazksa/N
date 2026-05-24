@@ -16,25 +16,23 @@
   // ═══════════════════════════════════════════════════════════════
   // 📋 BASE DOCUMENT TEMPLATES
   // ═══════════════════════════════════════════════════════════════
-  const SECURITY = 'حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند)';
-  const MILITARY = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة) + دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء';
-  const MILITARY_FULL = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء)';
+    const SECURITY = 'حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند).';
+  const MILITARY = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء) إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات.';
+  const MILITARY_FULL = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء) إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات.';
   const FEMALE_PERMISSION = 'عدم ممانعة من ولي الأمر (في حالة كانت متزوجة إحضار شهادة الزواج وعدم الممانعة من الزوج + صورة عن جواز سفر الزوج) (في حال كانت عزباء، إحضار عدم ممانعة من ولي الأمر + قيد فردي + صورة عن جواز سفر ولي الأمر)';
   const PASSPORT = 'إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات';
   const PASSPORT_NEW = 'جواز السفر الجديد + صور شخصية عدد 2 بخلفية بيضاء';
-  const MEDICAL_BIO = 'عمل فحص طبي وبصمة معتمد لدى السفارة السعودية + صورة شخصية خلفية بيضاء + جواز السفر';
-  const VACCINE  = 'شهادة مطعوم السحايا الرباعي';
-  const AUTH     = 'عمل تفويض إلكتروني للمكتب';
-  const CONTRACT = 'عقد عمل من الشركة السعودية + خطاب إطلاع مختومين من الغرفة التجارية والخارجية السعودية';
-  const CONTRACT_DOMESTIC = 'عقد عمل مصدق من الغرفة التجارية والخارجية السعودية';
+  const MEDICAL_BIO = 'عمل فحص طبي وبصمة معتمد لدى السفارة السعودية (صورة شخصية بخلفية بيضاء + جواز السفر).';
+  const VACCINE  = 'الحصول على شهادة مطعوم السحايا.';
+  const AUTH     = 'عمل تفويض إلكتروني للمكتب.';
+  const CONTRACT = 'عقد عمل مصدق من الغرفة التجارية والخارجية السعودية.';
+  const CONTRACT_DOMESTIC = 'عقد عمل مصدق من الغرفة التجارية والخارجية السعودية.';
   const QVP      = 'الحصول على شهادة الاعتماد المهني';
-  const ATTEST   = 'ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه (مثل: حسن السيرة والسلوك) من وزارة الخارجية الأردنية قبل تقديمها';
-  const DEGREE   = 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل + تصديق من وزارة الخارجية';
+  const ATTEST   = 'ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه (مثل: حسن السيرة والسلوك، وشهادات الميلاد أو الزواج) من وزارة الخارجية الأردنية قبل تقديمها.';
+  const DEGREE   = 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل';
   const SCHOOL   = 'إحضار الشهادة المدرسية (الأصل)';
   const DRIVER_LICENSE = 'صورة عن رخصة السياقة مختومة من إدارة الترخيص';
-
   // === ENGINEERING-SPECIFIC SHARED CONSTANTS (Strict Production Payload) ===
-  // Cloned/referenced — NEVER hardcoded inside business logic.
   const ENG_DEGREE       = 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل';
   const ENG_EXP_2Y       = 'خبرة لمدة سنتين بنفس مسمى التأشيرة';
   const ENG_EXP_1Y       = 'خبرة سنة واحدة بنفس مسمى التأشيرة';
@@ -43,10 +41,25 @@
   const ENG_MUSADAQA     = 'الحصول على شهادة من موقع مصادقة السعودي';
   const ENG_JEA          = 'عضوية + مزاولة مهنة من نقابة المهندسين الأردنية';
   const ENG_SCE          = 'التسجيل في هيئة المهندسين السعودية';
-  const AUTH_OFFICE      = 'عمل تفويض للمكتب';
-  const SECONDARY_SCHOOL = 'إحضار شهادة الثانوية العامة (التوجيهي) — الأصل';
+  const AUTH_OFFICE      = 'عمل تفويض إلكتروني للمكتب';
+  const SECONDARY_SCHOOL = 'إحضار شهادة الثانوية العامة (الأصل)';
 
   const TEMPLATES = {
+    family_recruitment: {
+      label: 'مسار الاستقدام العائلي',
+      icon: 'fa-users',
+      reqs: [
+        SECURITY,
+        'شهادات الميلاد الأصلية للأولاد مصدقة من الأحوال والخارجية',
+        'عقد الزواج أو شهادة الزواج أصلي مصدق (في حال كان عقد زواج يكون مختوم من قاضي القضاة والمحكمة الشرعية وخارجية أردنية)',
+        'عمل فحص طبي للزوجة من المختبر المعتمد لدى السفارة السعودية (صورة شخصية بخلفية بيضاء + جواز السفر). (إذا كان المولود فوق سن الـ 16 يجب إحضار فحص طبي له أيضاً)',
+        PASSPORT_NEW,
+        'إذا كان المولود أنثى فوق سن 16 إحضار شهادة خلو موانع من المحكمة الشرعية مصدقة من المحكمة وقاضي القضاة ووزارة الخارجية الأردنية',
+        'صورة عن تأشيرة الاستقدام',
+        'حجز موعد لدى مكتب تأشير',
+        ATTEST
+      ]
+    },
     executive: {
       label: 'مسار المستثمر / المدير العام',
       icon: 'fa-crown',
@@ -129,12 +142,12 @@
     },
     // No-experience entry track — بائع مباشر
     direct_sales: {
-      label: 'مسار البيع المباشر',
+      label: 'مسار البيع المباشر / منسق زهور',
       icon: 'fa-store',
       reqs: [
         SECURITY, MILITARY,
-        SECONDARY_SCHOOL,
-        ENG_EXP_NONE,
+        'إحضار شهادة الصف العاشر',
+        'خبرة لمدة سنة واحدة بنفس مسمى التأشيرة',
         MEDICAL_BIO, CONTRACT,
         VACCINE, AUTH, ATTEST
       ]
@@ -332,6 +345,10 @@
                  'مراقب الجودة', 'مراقب جودة', 'مراقبة الجودة', 'مراقبه جوده']
     },
     // 🛒 Direct Sales — Secondary school + NO experience + NO QVP
+    {
+      id: 'family_recruitment', template: 'family_recruitment', tier: 'management',
+      keywords: ['استقدام عائلي', 'استقدام عائلي', 'اقامة', 'أقامة', 'إقامة', 'زيارة عائلية']
+    },
     {
       id: 'direct_sales', template: 'direct_sales', tier: 'vocational',
       keywords: ['بائع مباشر', 'بائعة مباشرة', 'بائعه مباشره', 'بائع', 'منسق زهور']
@@ -803,8 +820,12 @@
       </div>
     `;
 
+    // Get current scroll position to maintain it
+    const scrollY = window.scrollY;
     document.body.insertAdjacentHTML('beforeend', html);
-    document.body.style.overflow = 'hidden'; // lock scroll
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
     renderRequirements();
 
     // ─── Close button: BULLETPROOF event delegation on document.
@@ -920,7 +941,7 @@
     // ✅ Strict no-duplication: prevent any bullet from repeating after gender swap
     finalReqs = distinct(finalReqs);
 
-    list.innerHTML = finalReqs.map((r, i) => {
+    let html = finalReqs.map((r, i) => {
       const isNote = r.includes('ملاحظة هامة');
       const cls = isNote
         ? 'bg-blue-50 border border-blue-200 text-blue-900 p-3 sm:p-4 rounded-lg flex gap-2 sm:gap-3'
@@ -930,12 +951,45 @@
         : `<span class="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 bg-gold/15 text-gold rounded-full font-bold text-xs sm:text-sm flex items-center justify-center">${i + 1}</span>`;
       return `<li class="${cls}">${icon}<div class="flex-1 text-xs sm:text-sm leading-relaxed">${escapeHtml(r)}</div></li>`;
     }).join('');
+
+    // 💡 Dynamic Accreditation Notice (if not already present in reqs)
+    const needsAccreditation = finalReqs.some(r => r.includes('الاعتماد المهني'));
+    const isFamily = currentGenerated.userTitle.includes('استقدام') || currentGenerated.userTitle.includes('اقامة');
+    if (!needsAccreditation && !isFamily) {
+      html += `
+        <li class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg print:mt-2 print:p-2 print:border-l-2 list-none">
+          <div class="flex items-center gap-2 mb-1">
+            <i class="fas fa-info-circle text-blue-500 print:text-xs"></i>
+            <span class="font-bold text-blue-800 text-sm print:text-[10pt]">تنبيه بخصوص الاعتماد المهني</span>
+          </div>
+          <p class="text-blue-700 text-xs leading-relaxed print:text-[9pt] print:leading-tight">
+            هذه المهنة لا تتطلب اختبار اعتماد مهني حالياً، ولكن يرجى العلم أنه قد يتم تفعيل شرط الاعتماد في أي وقت حسب تحديثات الأنظمة السعودية.
+          </p>
+        </li>
+      `;
+    }
+
+    // 📄 Print Footer
+    html += `
+      <li class="hidden print:block mt-6 pt-4 border-t border-gray-200 text-center list-none">
+        <p class="text-[9pt] text-gray-500 italic mb-1">ملاحظة: قد تختلف المستندات حسب السفارة والحالة الفردية، يرجى التواصل معنا للحصول على معلومات دقيقة ومحدثة.</p>
+        <p class="text-[10pt] font-bold text-gray-700">© 2026 مكتب تأشيرات السعودية في الأردن - جميع الحقوق محفوظة.</p>
+      </li>
+    `;
+
+    list.innerHTML = html;
   }
 
   function closeGeneratedSheet() {
     const modal = document.getElementById('generated-sheet-modal');
-    if (modal) modal.remove();
-    document.body.style.overflow = '';
+    if (modal) {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      modal.remove();
+    }
     document.removeEventListener('keydown', escClose);
     currentGenerated = null;
   }

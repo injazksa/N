@@ -101,7 +101,8 @@ function isGibberish(input) {
         "انا", "مين", "شو", "وين", "ليش", "مش", "انت", "لا", "ميسي", "رونالدو", "بطيخ", 
         "كلب", "حيوان", "حمار", "خيل", "ابن", "ملعون", "طيز", "منيك", "شرموط", "عرص",
         "asd", "qwe", "zxc", "123", "مطرب", "مغني", "فنان", "سعفون", "جربان", "جرابين",
-        "قحبة", "كس", "شلن", "مرا الملعون", "الشراميط", "المنيك", "طيزري"
+        "قحبة", "كس", "شلن", "مرا الملعون", "الشراميط", "المنيك", "طيزري", "طيزي",
+        "ليش مين انا", "شو وين", "مش انت", "لاللا", "مواصفات الكلب", "ابن الكلب"
     ];
     
     if (nonsensicalPatterns.some(p => norm.includes(p))) return true;
@@ -136,13 +137,13 @@ function classifyProfession(inputName) {
     // 📋 PREDEFINED DOCUMENT TEMPLATES (Fixed Sets)
     const DOCS = {
         BASE: [
-            "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند)",
-            "الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة) + دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء",
-            "عمل فحص طبي وبصمة معتمد لدى السفارة السعودية + صورة شخصية خلفية بيضاء + جواز السفر",
-            "عقد عمل من الشركة السعودية + خطاب إطلاع مختومين من الغرفة التجارية والخارجية السعودية",
-            "عمل تفويض إلكتروني للمكتب",
-            "شهادة مطعوم السحايا الرباعي",
-            "ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه من وزارة الخارجية الأردنية قبل تقديمها"
+            "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند).",
+            "الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء) إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات.",
+            "عمل فحص طبي وبصمة معتمد لدى السفارة السعودية (صورة شخصية بخلفية بيضاء + جواز السفر).",
+            "عقد عمل مصدق من الغرفة التجارية والخارجية السعودية.",
+            "عمل تفويض إلكتروني للمكتب.",
+            "الحصول على شهادة مطعوم السحايا.",
+            "ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه من وزارة الخارجية الأردنية قبل تقديمها."
         ],
         ACADEMIC_ADDON: [
             "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل",
@@ -188,19 +189,111 @@ function classifyProfession(inputName) {
 
     // 🧠 DOCUMENT RULE ENGINE (Category Classifier + Role Refiner)
     
-    // 1. MEDICAL
-    if (normName.includes("طبيب") || normName.includes("دكتور") || normName.includes("ممرض") || normName.includes("صيدلي")) {
+    // 0. Generic Title Blocker
+    const genericTitles = ["مهندس", "مهندسين", "مدير", "مدراء", "أخصائي", "اخصائي", "أخصائية", "اخصائية", "دكتور", "طبيب"];
+    if (genericTitles.includes(normName)) {
+        let msg = "يرجى إدخال مسمى وظيفي دقيق.";
+        if (normName.includes("مهندس")) msg = "يرجى تحديد تخصص الهندسة بدقة (مثال: مهندس كهرباء، مهندس مدني، مهندس ميكانيك...) للوصول للأوراق الصحيحة.";
+        if (normName.includes("مدير")) msg = "يرجى كتابة المسمى الإداري الكامل للتأشيرة (مثال: مدير إداري، مدير مبيعات، مدير مشاريع...).";
+        if (normName.includes("أخصائي") || normName.includes("اخصائي")) msg = "يرجى تحديد التخصص (مثال: أخصائي تسويق، أخصائي مختبرات...) للوصول للأوراق الصحيحة.";
+        if (normName.includes("دكتور") || normName.includes("طبيب")) msg = "يرجى تحديد تخصص الطب بدقة (مثال: طبيب عام، طبيب أسنان...) للوصول للأوراق الصحيحة.";
+        
+        return {
+            name_ar: inputName,
+            profession_name_ar: inputName,
+            code: "---",
+            category: "تنبيه",
+            role: "Generic Title",
+            requirements: [msg],
+            isAiGenerated: true,
+            isGenericWarning: true
+        };
+    }
+
+    // 1. SOVEREIGN EXECUTIVE EXCLUSIONS (Premium titles - DO NOT MODIFY)
+    if (normName === "رئيس تنفيذي" || normName === "مدير عام" || normName === "مستثمر") {
+        category = "المدراء";
+        role = "Executive / Sovereign";
+        finalReqs.splice(2, 0, ...DOCS.EXECUTIVE_ADDON);
+        if (normName === "مستثمر" || normName === "مدير عام") {
+             finalReqs.splice(4, 0, "السجل التجاري السعودي (في حال كان المسمى مدير عام أو شريك)");
+        }
+    }
+    // 2. MEDICAL SECTOR (Master Template for all medical titles)
+    else if (normName.includes("طبيب") || normName.includes("دكتور") || normName.includes("ممرض") || normName.includes("صيدلي") || normName.includes("فني مختبر") || normName.includes("قابلة")) {
         category = "الاختصاصيون";
-        role = "Medical Professional";
+        role = "Medical Sector";
         finalReqs.splice(2, 0, ...DOCS.MEDICAL_ADDON);
     }
-    // 2. ENGINEERING
+    // 3. ENGINEERING SECTOR (Master Template for all engineering disciplines)
     else if (normName.includes("مهندس") || normName.includes("هندسه")) {
         category = "الاختصاصيون";
-        role = normName.includes("كهرباء") ? "Electrical Engineer" : 
-               normName.includes("مدني") ? "Civil Engineer" : 
-               normName.includes("ميكانيك") ? "Mechanical Engineer" : "General Engineer";
+        role = "Engineering Sector";
         finalReqs.splice(2, 0, ...DOCS.ENGINEERING_ADDON);
+        finalReqs.splice(4, 0, "عضوية + مزاولة مهنة من نقابة المهندسين الأردنية", "التسجيل في هيئة المهندسين السعودية");
+    }
+    // 4. ACADEMIC & ADVANCED SECTOR (Specialists, Supervisors, Coordinators)
+    else if (normName.includes("اخصائي") || normName.includes("مشرف") || normName.includes("منسق") || normName.includes("سكرتير") || normName.includes("مدير") || normName.includes("رئيس") || normName.includes("مسؤول")) {
+        
+        // Specific Overrides for Quality / Admin Assistant
+        if (normName.includes("مراقب جودة") || normName.includes("مساعد اداري")) {
+            category = "الفنيون";
+            role = "Quality / Admin Assistant";
+            finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة (الأصل)", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
+            // NO accreditation for these two
+        } else {
+            category = "المدراء";
+            role = "Academic / Management Sector";
+            finalReqs.splice(2, 0, ...DOCS.ACADEMIC_ADDON, "الحصول على شهادة الاعتماد المهني");
+        }
+    }
+    // 5. DRIVING & DOMESTIC SECTOR
+    else if (normName.includes("سائق") || normName.includes("مربية") || normName.includes("منزلي")) {
+        category = "العمال";
+        if (normName.includes("سائق")) {
+            role = "Driving Sector";
+            finalReqs.splice(2, 0, "صورة عن رخصة السياقة مختومة من إدارة الترخيص");
+        } else if (normName.includes("مربية")) {
+            role = "Domestic Nanny";
+            finalReqs.splice(2, 0, "عدم ممانعة من ولي الأمر مصدقة", "شهادة خلو سوابق");
+        } else {
+            role = "Domestic Worker";
+            finalReqs.splice(2, 0, "إحضار الشهادة المدرسية (الأصل)");
+        }
+    }
+    // 6. COMMERCIAL & SALES SECTOR
+    else if (normName.includes("مندوب") || normName.includes("بائع") || normName.includes("مبيعات") || normName.includes("مشتريات") || normName.includes("منسق زهور")) {
+        category = "الكتبة";
+        if (normName.includes("بائع") || normName.includes("منسق زهور")) {
+            role = "Direct Sales / Florist";
+            finalReqs.splice(2, 0, "إحضار شهادة الصف العاشر", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
+            // NO accreditation for these
+        } else {
+            role = "Sales / Purchasing Representative";
+            const expYears = normName.includes("مشتريات") ? "سنتين" : "سنة";
+            finalReqs.splice(2, 0, "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل", `خبرة لمدة ${expYears} بنفس مسمى التأشيرة`);
+        }
+    }
+    // 7. CRAFTS & PERSONAL SERVICES
+    else if (normName.includes("مصفف شعر") || normName.includes("حلاق") || normName.includes("طاهي") || normName.includes("شيف")) {
+        category = "الحرفيون";
+        if (normName.includes("مصفف شعر")) {
+            role = "Hair Stylist";
+            finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة (الأصل)", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة", "شهادة مزاولة مهنة", "الحصول على شهادة الاعتماد المهني");
+        } else {
+            role = "Crafts / Services";
+            finalReqs.splice(2, 0, "إحضار شهادة الصف العاشر", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة", "شهادة مزاولة مهنة", "الحصول على شهادة الاعتماد المهني");
+        }
+    }
+    // 8. GENERAL LABOUR SECTOR
+    else if (normName.includes("عامل") || normName.includes("تحميل") || normName.includes("تنزيل") || normName.includes("تغليف") || normName.includes("مخزن") || normName.includes("تنظيف") || normName.includes("فراش")) {
+        category = "العمال";
+        role = "General Labour Sector";
+        finalReqs = finalReqs.filter(r => !r.includes("الثانوية العامة") && !r.includes("دبلوم"));
+        finalReqs.splice(2, 0, ...DOCS.LABOUR_ADDON);
+        if (!normName.includes("ملصقات") && !normName.includes("تنظيف خزانات")) {
+            // No accreditation for generic labor
+        }
     }
     // 3. EXECUTIVE / INVESTOR
     else if (normName.includes("مدير عام") || normName.includes("ceo") || normName.includes("مستثمر") || normName.includes("رئيس تنفيذي")) {
@@ -225,10 +318,13 @@ function classifyProfession(inputName) {
         category = "الكتبة";
         if (normName.includes("مندوب") || normName.includes("مشتريات")) {
             role = "Sales / Purchasing Representative";
-            finalReqs.splice(2, 0, ...DOCS.ACADEMIC_ADDON);
+            const expYears = normName.includes("مشتريات") ? "سنتين" : "سنة";
+            finalReqs.splice(2, 0, "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل", `خبرة لمدة ${expYears} بنفس مسمى التأشيرة`);
         } else if (normName.includes("بائع") || normName.includes("منسق زهور")) {
             role = "Direct Sales / Service";
             finalReqs.splice(2, 0, "إحضار شهادة الصف العاشر", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة"); 
+            // Remove QVP for these roles if added by mistake
+            finalReqs = finalReqs.filter(r => !r.includes("الاعتماد المهني"));
         } else {
             role = "Administrative Staff";
             finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
@@ -244,18 +340,26 @@ function classifyProfession(inputName) {
              finalReqs.splice(2, 0, ...DOCS.TECHNICAL_ADDON);
         }
     }
-    // 8. LABOUR / WAREHOUSE
-    else if (normName.includes("عامل") || normName.includes("تحميل") || normName.includes("تنزيل") || normName.includes("تغليف") || normName.includes("مخزن") || normName.includes("تنظيف")) {
-        category = "العمال";
-        role = normName.includes("مخزن") ? "Warehouse Worker" : 
-               normName.includes("تغليف") ? "Packing Worker" : 
-               normName.includes("تنظيف") ? "Cleaning Worker" : "General Labour";
+        // 5. DRIVING SECTOR (Sovereign Small/Private Vehicles)
+    else if (normName === "سائق خاص" || normName === "سائق سيارة صغيرة" || normName === "سائق خصوصي") {
+        category = "قطاع السائقين";
+        role = "Driving Sector";
+        finalReqs.splice(2, 0, "صورة عن رخصة السياقة مختومة من إدارة الترخيص");
+        // Drivers usually don't need experience or accreditation in this master template
+    }
+    // 6. GENERAL LABOUR SECTOR (Master Template for all labor roles)
+    else if (normName.includes("عامل") || normName.includes("تحميل") || normName.includes("تنزيل") || normName.includes("تغليف") || normName.includes("مخزن") || normName.includes("تنظيف") || normName.includes("فراش")) {
+        category = "قطاع العمال الشامل";
+        role = "General Labour Sector";
         
-        // Remove Accreditation for specific low-skilled roles
-        if (normName.includes("ملصقات") || normName.includes("تنظيف خزانات")) {
-            // Already handled by LABOUR_ADDON not having QVP
-        }
+        // Enforce: ONLY school certificate for labor, no secondary/diploma
+        finalReqs = finalReqs.filter(r => !r.includes("الثانوية العامة") && !r.includes("دبلوم"));
         finalReqs.splice(2, 0, ...DOCS.LABOUR_ADDON);
+
+        // Accreditation Exception: Only for these two
+        if (!normName.includes("ملصقات") && !normName.includes("تنظيف خزانات")) {
+            // finalReqs.push("الحصول على شهادة الاعتماد المهني"); // If general labor needs it, but per prompt usually not mentioned unless skilled
+        }
     }
     // 9. SKILLED SERVICE (Chef, Barber, etc.)
     else if (normName.includes("طاهي") || normName.includes("شيف") || normName.includes("حلاق") || normName.includes("مصفف") || normName.includes("منسق زهور")) {
@@ -272,6 +376,30 @@ function classifyProfession(inputName) {
         category = "الحرفيون";
         role = "Driver";
         finalReqs.splice(2, 0, ...DOCS.DRIVER_ADDON);
+    }
+    // 11. FAMILY RECRUITMENT
+    else if (normName.includes("استقدام") || normName.includes("اقامة") || normName.includes("أقامة") || normName.includes("زيارة")) {
+        category = "المعاملات العائلية";
+        role = "Family Recruitment";
+        return {
+            name_ar: inputName,
+            profession_name_ar: inputName,
+            code: "FAMILY",
+            category: category,
+            role: role,
+            requirements: [
+                "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند)",
+                "شهادات الميلاد الأصلية للأولاد مصدقة من الأحوال والخارجية",
+                "عقد الزواج أو شهادة الزواج أصلي مصدق (في حال كان عقد زواج يكون مختوم من قاضي القضاة والمحكمة الشرعية وخارجية أردنية)",
+                "عمل فحص طبي للزوجة من المختبر المعتمد لدى السفارة السعودية (صورة شخصية بخلفية بيضاء + جواز السفر). (إذا كان المولود فوق سن الـ 16 يجب إحضار فحص طبي له أيضاً)",
+                "جواز السفر الجديد + صور شخصية عدد 2 بخلفية بيضاء",
+                "إذا كان المولود أنثى فوق سن 16 إحضار شهادة خلو موانع من المحكمة الشرعية مصدقة من المحكمة وقاضي القضاة ووزارة الخارجية الأردنية",
+                "صورة عن تأشيرة الاستقدام",
+                "حجز موعد لدى مكتب تأشير",
+                "ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه (مثل: حسن السيرة والسلوك، وشهادات الميلاد أو الزواج) من وزارة الخارجية الأردنية قبل تقديمها"
+            ],
+            isAiGenerated: true
+        };
     }
 
     return {

@@ -346,87 +346,94 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 	 margin: 10mm 15mm;
 	 }
 	 * { box-sizing: border-box; }
-	 body {
-	 font-family: 'Arial', sans-serif;
-	 direction: rtl;
-	 text-align: right;
-	 line-height: ${isCompact ? '1.4' : '1.6'};
-	 color: #1e293b;
-	 margin: 0;
-	 padding: 0;
-	 font-size: ${isCompact ? '13px' : '14px'};
-	 }
-	 .print-container {
-	 width: 100%;
-	 max-height: 100%;
-	 page-break-inside: avoid;
-	 break-inside: avoid;
-	 display: flex;
-	 flex-direction: column;
-	 }
-	 .print-header {
-	 text-align: center;
-	 margin-bottom: ${isCompact ? '15px' : '25px'};
-	 padding-bottom: ${isCompact ? '10px' : '15px'};
-	 border-bottom: 2px solid #C9A26A;
-	 }
-	 .print-header h1 {
-	 color: #1B2A41;
-	 font-size: ${isCompact ? '22px' : '26px'};
-	 margin: 0 0 5px 0;
-	 }
-	 .print-header .subtitle {
-	 color: #C9A26A;
-	 font-size: ${isCompact ? '15px' : '17px'};
-	 font-weight: bold;
-	 margin-bottom: 8px;
-	 }
-	 .office-info {
-	 color: #475569;
-	 font-size: ${isCompact ? '11px' : '12px'};
-	 line-height: 1.4;
-	 }
-	 .document-title {
-	 background: #1B2A41;
-	 color: white;
-	 padding: ${isCompact ? '8px' : '12px'};
-	 margin: ${isCompact ? '10px 0' : '15px 0'};
-	 border-radius: 6px;
-	 font-size: ${isCompact ? '16px' : '18px'};
-	 font-weight: bold;
-	 text-align: center;
-	 }
-	 .profession-info {
-	 background: #f8fafc;
-	 padding: ${isCompact ? '10px' : '12px'};
-	 margin: ${isCompact ? '8px 0' : '12px 0'};
-	 border-right: 4px solid #C9A26A;
-	 border-radius: 4px;
-	 font-size: ${isCompact ? '12px' : '13px'};
-	 }
-	 .requirements-list {
-	 margin: ${isCompact ? '10px 0' : '15px 0'};
-	 padding-right: 25px;
-	 }
-	 .requirements-list li {
-	 padding: ${isCompact ? '4px 0' : '8px 0'};
-	 border-bottom: 1px solid #f1f5f9;
-	 }
-	 .requirements-list li:last-child { border-bottom: none; }
-	 .footer {
-	 margin-top: auto;
-	 padding-top: 15px;
-	 border-top: 1px solid #e2e8f0;
-	 text-align: center;
-	 color: #64748b;
-	 font-size: 10px;
-	 }
-	 .footer p { margin: 2px 0; }
-	 h2 { 
-	 color: #1B2A41; 
-	 margin: ${isCompact ? '10px 0 5px' : '20px 0 10px'}; 
-	 font-size: ${isCompact ? '16px' : '18px'};
-	 }
+		 body {
+		 font-family: 'Arial', sans-serif;
+		 direction: rtl;
+		 text-align: right;
+		 line-height: ${isCompact ? '1.7' : '2.0'};
+		 color: #1e293b;
+		 margin: 0;
+		 padding: 0;
+		 font-size: ${isCompact ? '14px' : '16px'};
+		 }
+		 .print-container {
+		 width: 100%;
+		 height: 100%;
+		 page-break-inside: avoid;
+		 break-inside: avoid;
+		 display: flex;
+		 flex-direction: column;
+		 }
+		 .print-header {
+		 text-align: center;
+		 margin-bottom: ${isCompact ? '20px' : '35px'};
+		 padding-bottom: ${isCompact ? '12px' : '20px'};
+		 border-bottom: 3px solid #C9A26A;
+		 }
+		 .print-header h1 {
+		 color: #1B2A41;
+		 font-size: ${isCompact ? '24px' : '28px'};
+		 margin: 0 0 5px 0;
+		 }
+		 .print-header .subtitle {
+		 color: #C9A26A;
+		 font-size: ${isCompact ? '16px' : '18px'};
+		 font-weight: bold;
+		 margin-bottom: 10px;
+		 }
+		 .office-info {
+		 color: #475569;
+		 font-size: ${isCompact ? '11px' : '13px'};
+		 line-height: 1.5;
+		 }
+		 .document-title {
+		 background: #1B2A41;
+		 color: white;
+		 padding: ${isCompact ? '10px' : '14px'};
+		 margin: ${isCompact ? '15px 0' : '20px 0'};
+		 border-radius: 8px;
+		 font-size: ${isCompact ? '18px' : '20px'};
+		 font-weight: bold;
+		 text-align: center;
+		 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		 }
+		 .profession-info {
+		 background: #f8fafc;
+		 padding: 10px 15px;
+		 margin: ${isCompact ? '10px 0' : '15px 0'};
+		 border-right: 5px solid #C9A26A;
+		 border-radius: 4px;
+		 font-size: ${isCompact ? '13px' : '14px'};
+		 display: flex;
+		 justify-content: space-between;
+		 align-items: center;
+		 }
+		 .requirements-list {
+		 margin: ${isCompact ? '15px 0' : '25px 0'};
+		 padding-right: 30px;
+		 flex-grow: 1;
+		 }
+		 .requirements-list li {
+		 padding: ${isCompact ? '10px 0' : '15px 0'};
+		 border-bottom: 1px solid #f1f5f9;
+		 }
+		 .requirements-list li:last-child { border-bottom: none; }
+		 .footer {
+		 margin-top: auto;
+		 padding-top: 20px;
+		 border-top: 2px solid #e2e8f0;
+		 text-align: center;
+		 color: #64748b;
+		 font-size: 11px;
+		 }
+		 .footer p { margin: 4px 0; }
+		 h2 { 
+		 color: #1B2A41; 
+		 margin: ${isCompact ? '15px 0 8px' : '25px 0 15px'}; 
+		 font-size: ${isCompact ? '17px' : '19px'};
+		 border-bottom: 1px solid #e2e8f0;
+		 padding-bottom: 5px;
+		 }
 	 </style>
 	 </head>
 	 <body>
@@ -445,21 +452,28 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 	 الأوراق المطلوبة لتأشيرة العمل السعودية
 	 </div>
 	 
-	 <div class="profession-info">
-	 <strong>المهنة:</strong> ${professionName} | 
-	 <strong>رمز المهنة:</strong> ${professionCode} | 
-	 <strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}
-	 </div>
+		 <div class="profession-info">
+		 <span><strong>المهنة:</strong> ${professionName}</span>
+		 <span><strong>رمز المهنة:</strong> ${professionCode}</span>
+		 <span><strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}</span>
+		 </div>
 	 
 	 <h2>الأوراق والمستندات المطلوبة:</h2>
-	 <ol class="requirements-list">
-	 ${requirements.map(req => `<li>${req}</li>`).join('')}
-	 </ol>
-	 
-	 <div class="footer">
-	 <p><strong>ملاحظة:</strong> قد تختلف المتطلبات حسب السفارة والحالة الفردية. يرجى التواصل معنا للحصول على معلومات دقيقة ومحدثة.</p>
-	 <p>© 2025 مكتب تأشيرات السعودية في الأردن - جميع الحقوق محفوظة</p>
-	 </div>
+		 <ol class="requirements-list">
+		 ${requirements.map(req => `<li>${req}</li>`).join('')}
+		 </ol>
+
+		 ${(!requirements.some(r => r.includes('الاعتماد المهني')) && !professionName.includes('استقدام') && !professionName.includes('اقامة')) ? `
+		 <div style="margin-top: 15px; padding: 10px; background-color: #f0f7ff; border-right: 4px solid #3b82f6; border-radius: 4px;">
+			 <div style="font-weight: bold; color: #1e40af; font-size: 11pt; margin-bottom: 5px;">تنبيه بخصوص الاعتماد المهني</div>
+			 <div style="color: #1e3a8a; font-size: 10pt; line-height: 1.4;">هذه المهنة لا تتطلب اختبار اعتماد مهني حالياً، ولكن يرجى العلم أنه قد يتم تفعيل شرط الاعتماد في أي وقت حسب تحديثات الأنظمة السعودية.</div>
+		 </div>
+		 ` : ''}
+		 
+		 <div class="footer">
+		 <p><strong>ملاحظة:</strong> قد تختلف المستندات حسب السفارة والحالة الفردية، يرجى التواصل معنا للحصول على معلومات دقيقة ومحدثة.</p>
+		 <p>© 2026 مكتب تأشيرات السعودية في الأردن - جميع الحقوق محفوظة</p>
+		 </div>
 	 </div>
 	 </body>
 	 </html>
