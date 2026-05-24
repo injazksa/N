@@ -139,7 +139,8 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 			 <ol class="requirements-list">
 			 ${requirements.filter(r => {
 				// Deduplicate passport/photo in print view too
-				if (r.includes('إحضار جواز السفر و 6 صور شخصية') && requirements.indexOf(r) !== 0) return false;
+				// Only deduplicate if it's EXACTLY the same string and not the first occurrence
+if (r === 'إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات.' && requirements.indexOf(r) !== requirements.lastIndexOf(r) && requirements.indexOf(r) !== requirements.indexOf(r)) return false;
 				return true;
 			 }).map(req => `<li>${req}</li>`).join('')}
 			 </ol>

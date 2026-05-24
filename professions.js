@@ -565,7 +565,7 @@ function closeProfessionModal() {
     document.body.style.top = '';
     document.body.style.width = '';
     document.body.style.overflow = '';
-    window.scrollTo({ top: professionModalScrollY, left: 0, behavior: 'instant' }); // ✅ استعادة موضع التمرير
+    window.scrollTo(0, professionModalScrollY); // ✅ استعادة موضع التمرير
 }
 
 function debounce(func, wait) {
