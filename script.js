@@ -340,12 +340,17 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 	 <head>
 	 <meta charset="UTF-8">
 	 <title>الأوراق المطلوبة - ${professionName}</title>
-	 <style>
-	 @page {
-	 size: A4;
-	 margin: 10mm 15mm;
-	 }
-	 * { box-sizing: border-box; }
+		 <style>
+		 @page {
+		 size: A4;
+		 margin: 10mm 15mm;
+		 }
+		 * { 
+			box-sizing: border-box; 
+			-webkit-print-color-adjust: exact !important;
+			print-color-adjust: exact !important;
+		 }
+		 a[href]:after { content: "" !important; }
 		 body {
 		 font-family: 'Arial', sans-serif;
 		 direction: rtl;
@@ -459,9 +464,13 @@ function printProfessionDocument(professionCode, professionName, requirements) {
 		 </div>
 	 
 	 <h2>الأوراق والمستندات المطلوبة:</h2>
-		 <ol class="requirements-list">
-		 ${requirements.map(req => `<li>${req}</li>`).join('')}
-		 </ol>
+			 <ol class="requirements-list">
+			 ${requirements.filter(r => {
+				// Deduplicate passport/photo in print view too
+				if (r.includes('إحضار جواز السفر و 6 صور شخصية') && requirements.indexOf(r) !== 0) return false;
+				return true;
+			 }).map(req => `<li>${req}</li>`).join('')}
+			 </ol>
 
 		 ${(!requirements.some(r => r.includes('الاعتماد المهني')) && !professionName.includes('استقدام') && !professionName.includes('اقامة')) ? `
 		 <div style="margin-top: 15px; padding: 10px; background-color: #f0f7ff; border-right: 4px solid #3b82f6; border-radius: 4px;">

@@ -826,6 +826,7 @@
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
     renderRequirements();
 
     // ─── Close button: BULLETPROOF event delegation on document.
@@ -941,6 +942,12 @@
     // ✅ Strict no-duplication: prevent any bullet from repeating after gender swap
     finalReqs = distinct(finalReqs);
 
+    // V6 Deduplication: Remove Passport/Photos from individual bullets as it is now in BASE (Military)
+    finalReqs = finalReqs.filter(r => {
+        if (r.includes('إحضار جواز السفر و 6 صور شخصية') && finalReqs.indexOf(r) !== 0) return false;
+        return true;
+    });
+
     let html = finalReqs.map((r, i) => {
       const isNote = r.includes('ملاحظة هامة');
       const cls = isNote
@@ -987,6 +994,7 @@
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
+      document.body.style.overflow = '';
       window.scrollTo(0, parseInt(scrollY || '0') * -1);
       modal.remove();
     }
