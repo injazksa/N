@@ -626,6 +626,9 @@
         <span>توليد أوراق المهنة</span>
       </button>
 
+      <!-- 📄 Inline Results Container -->
+      <div id="smart-fallback-results" class="hidden mt-6 border-t-2 border-gold/20 pt-6 animate-sf-fade-in"></div>
+
       <!-- 🛡️ Validation error (hidden by default) -->
 	      <div id="smart-fallback-error" class="hidden mt-3 bg-amber-50 border-2 border-amber-300 text-amber-900 rounded-xl p-3 sm:p-4 text-sm sm:text-base"
 	           data-testid="smart-fallback-error" role="alert">
@@ -757,195 +760,100 @@
   // ═══════════════════════════════════════════════════════════════
   let currentGenerated = null;
 
+  
   function showGeneratedSheet(userTitle, template, match, gender) {
-    let existing = document.getElementById('generated-sheet-modal');
-    if (existing) existing.remove();
-
     currentGenerated = { userTitle, template, match, gender };
+    
+    const resultsContainer = document.getElementById('smart-fallback-results');
+    if (!resultsContainer) return;
 
-	    const html = `
-	      <div id="generated-sheet-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" data-testid="generated-sheet-modal" role="dialog" aria-modal="true">
-	        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" id="generated-sheet-overlay"></div>
-	
-	        <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]" dir="rtl">
-	            <!-- 🔴 CLOSE BUTTON: fixed at top-left of the modal container -->
-	            <button id="generated-sheet-close" type="button"
-	              class="absolute top-3 left-3 sm:top-4 sm:left-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white text-xl z-[100] transition-all"
-	              data-testid="generated-sheet-close"
-	              aria-label="إغلاق">
-	              <i class="fas fa-times"></i>
-	            </button>
-	            <!-- Header -->
-	            <div class="bg-gradient-to-l from-navy to-navy/90 text-white p-5 sm:p-8 relative">
-              <div class="pl-14 sm:pl-14">
-                <div class="inline-flex items-center gap-2 bg-gold/20 text-gold px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold mb-2">
-                  <i class="fas ${template.icon}"></i>
-                  <span>${escapeHtml(template.label)}</span>
-                </div>
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-bold mb-1" data-testid="generated-sheet-title">
-                  ${escapeHtml(userTitle)}
-                </h2>
-              </div>
-
-              <!-- Gender Switcher (hidden if locked or forced) -->
-              ${template.genderLocked || template.forcedGender ? '' : `
-              <div class="mt-3 bg-white/10 rounded-xl p-2 sm:p-3 flex items-center justify-between gap-3" data-testid="generated-gender-switcher">
-                <span class="text-xs sm:text-sm font-semibold text-white/90">
-                  <i class="fas fa-venus-mars text-gold ml-1"></i>
-                  جنس المتقدم:
-                </span>
-                <div class="flex gap-1.5">
-                  <button data-gender="male" class="gender-btn px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all ${gender === 'male' ? 'bg-gold text-white' : 'bg-white/20 text-white hover:bg-white/30'}" data-testid="gender-male">
-                    <i class="fas fa-mars ml-0.5"></i>ذكر
-                  </button>
-                  <button data-gender="female" class="gender-btn px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all ${gender === 'female' ? 'bg-gold text-white' : 'bg-white/20 text-white hover:bg-white/30'}" data-testid="gender-female">
-                    <i class="fas fa-venus ml-0.5"></i>أنثى
-                  </button>
-                </div>
-              </div>
-              `}
+    resultsContainer.classList.remove('hidden');
+    resultsContainer.innerHTML = `
+      <div class="bg-gray-50 rounded-2xl overflow-hidden border-2 border-gold/10 shadow-inner" dir="rtl">
+        <!-- Header -->
+        <div class="bg-navy text-white p-4 sm:p-6 flex justify-between items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-[10px] font-bold mb-1">
+              <i class="fas ${template.icon}"></i>
+              <span>${escapeHtml(template.label)}</span>
             </div>
-
-	            <!-- Body -->
-	            <div class="p-4 sm:p-8 flex-1 overflow-y-auto scrolling-touch">
-              <h3 class="text-base sm:text-lg font-bold text-navy mb-3 sm:mb-4 flex items-center gap-2">
-                <i class="fas fa-clipboard-list text-gold"></i>
-                الأوراق والمستندات المطلوبة:
-              </h3>
-              <ol id="generated-sheet-list" class="space-y-2 sm:space-y-3 text-gray-800 leading-relaxed text-sm sm:text-base" data-testid="generated-sheet-list">
-              </ol>
-            </div>
-
-            <!-- Footer -->
-            <div class="bg-gray-50 p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-3 border-t">
-              <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً، أحتاج للاستفسار عن مهنة: ' + userTitle)}"
-                 target="_blank" rel="noopener"
-                 class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white text-sm sm:text-base font-bold rounded-xl transition"
-                 data-testid="generated-whatsapp-btn">
-                <i class="fab fa-whatsapp text-lg sm:text-xl"></i>
-                <span>تأكيد عبر واتساب</span>
-              </a>
-              <button id="generated-print-btn" type="button"
-                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-navy hover:bg-navy/90 active:bg-navy/80 text-white text-sm sm:text-base font-bold rounded-xl transition"
-                data-testid="generated-print-btn">
-                <i class="fas fa-print"></i>
-                <span>طباعة الأوراق</span>
-              </button>
-            </div>
+            <h2 class="text-lg sm:text-xl font-bold">${escapeHtml(userTitle)}</h2>
           </div>
+          <button onclick="document.getElementById('smart-fallback-results').classList.add('hidden')" class="text-white/50 hover:text-white transition">
+            <i class="fas fa-times-circle text-xl"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 sm:p-6">
+          <h3 class="text-sm sm:text-base font-bold text-navy mb-3 flex items-center gap-2">
+            <i class="fas fa-clipboard-list text-gold"></i>
+            الأوراق والمستندات المطلوبة:
+          </h3>
+          <ol id="generated-sheet-list-inline" class="space-y-2 text-gray-800 text-sm sm:text-base">
+            <!-- Requirements injected here -->
+          </ol>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="bg-white p-4 flex flex-col sm:flex-row gap-2 border-t border-gray-100">
+          <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً، أحتاج للاستفسار عن مهنة: ' + userTitle)}"
+             target="_blank" rel="noopener"
+             class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition">
+            <i class="fab fa-whatsapp"></i>
+            <span>تأكيد واتساب</span>
+          </a>
+          <button onclick="window.printGeneratedSheet()"
+            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-navy hover:bg-navy/90 text-white text-sm font-bold rounded-xl transition">
+            <i class="fas fa-print"></i>
+            <span>طباعة الأوراق</span>
+          </button>
         </div>
       </div>
     `;
 
-    // Get current scroll position to maintain it
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    document.body.insertAdjacentHTML('beforeend', html);
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-    renderRequirements();
+    renderRequirementsInline();
+    
+    // Scroll to results smoothly
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    // ─── Close button: BULLETPROOF event delegation on document.
-    //     Works regardless of DOM mutations or stacking context issues. ───
-    const closeHandler = function (e) {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
-      closeGeneratedSheet();
-    };
-    // Direct listener (primary path)
-    const closeBtn = document.getElementById('generated-sheet-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closeHandler);
-      closeBtn.addEventListener('touchstart', function(e){ e.preventDefault(); closeHandler(e); }, { passive: false });
-    }
-    // Overlay click (tap outside) to close
-    const overlay = document.getElementById('generated-sheet-overlay');
-    if (overlay) {
-      overlay.addEventListener('click', function (e) {
-        if (e.target === overlay) closeHandler(e);
-      });
-    }
-    // BACKUP path: event delegation on body — catches any future click on the close button
-    // even if the direct listener is somehow lost. Self-removing after modal closes.
-    function bodyDelegate(e) {
-      const t = e.target;
-      if (!t) return;
-      const isCloseBtn = (t.id === 'generated-sheet-close') ||
-                        (t.closest && t.closest('#generated-sheet-close')) ||
-                        (t.getAttribute && t.getAttribute('data-testid') === 'generated-sheet-close');
-      if (isCloseBtn) {
-        e.preventDefault(); e.stopPropagation();
-        closeGeneratedSheet();
-        document.body.removeEventListener('click', bodyDelegate, true);
-      }
-    }
-    document.body.addEventListener('click', bodyDelegate, true);
-    // Also ESC key
-    document.addEventListener('keydown', escClose);
-
-    document.getElementById('generated-print-btn').onclick = printGeneratedSheet;
-    document.querySelectorAll('#generated-sheet-modal .gender-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        if (!currentGenerated) return;
-        currentGenerated.gender = this.dataset.gender;
-        document.querySelectorAll('#generated-sheet-modal .gender-btn').forEach(b => {
-          if (b.dataset.gender === currentGenerated.gender) {
-            b.classList.remove('bg-white/20'); b.classList.add('bg-gold');
-          } else {
-            b.classList.remove('bg-gold'); b.classList.add('bg-white/20');
-          }
-        });
-        renderRequirements();
-      });
-    });
-
-    // 📍 No scroll jumping: only scroll the modal content to top, not the main page.
-    setTimeout(() => {
-      const modal = document.getElementById('generated-sheet-modal');
-      const body  = modal && modal.querySelector('.overflow-y-auto');
-      if (body) body.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
-
-    // FB Pixel
+    // Pixel tracking
     try {
       if (window.fbq) {
         window.fbq('trackCustom', 'SmartFallbackGenerate', {
           user_title: userTitle,
-          matched_template: match.template,
-          matched_keyword: match.matched_keyword || 'none',
           gender: gender
         });
-        window.fbq('track', 'Lead', { content_name: 'Smart Fallback: ' + userTitle });
       }
     } catch (e) {}
   }
 
-  function escClose(e) {
-    if (e.key === 'Escape') closeGeneratedSheet();
-  }
-
-  /**
-   * Strict array-deduplication helper.
-   * Normalises whitespace before comparison so e.g. trailing periods or
-   * extra spaces still hit the same bucket. Preserves first-seen order.
-   */
-  function distinct(arr) {
-    const seen = new Set();
-    const out = [];
-    for (const item of arr) {
-      const key = String(item || '').trim().replace(/\s+/g, ' ');
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      out.push(item);
-    }
-    return out;
-  }
-
-  function renderRequirements() {
+  function renderRequirementsInline() {
     if (!currentGenerated) return;
-    const list = document.getElementById('generated-sheet-list');
+    const list = document.getElementById('generated-sheet-list-inline');
     if (!list) return;
     const { template, gender } = currentGenerated;
+
+    const noSwap = template.genderLocked || template.forcedGender;
+    let finalReqs = template.reqs.map((req) => {
+      if (!noSwap && gender === 'female' && (req.includes('الوثائق العسكرية') || req.includes('مشروحات من القيادة'))) {
+        return FEMALE_PERMISSION;
+      }
+      return req;
+    });
+
+    finalReqs = distinct(finalReqs).filter(r => r !== PASSPORT);
+
+    list.innerHTML = finalReqs.map((r, i) => {
+      const isNote = r.includes('ملاحظة هامة');
+      const cls = isNote ? 'bg-blue-50 p-3 rounded-lg border border-blue-100' : 'bg-white p-3 rounded-lg border border-gray-100';
+      return `<li class="${cls} flex gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-gold/10 text-gold rounded-full flex items-center justify-center text-xs font-bold">${i+1}</span>
+        <div class="flex-1 text-xs sm:text-sm">${escapeHtml(r)}</div>
+      </li>`;
+    }).join('');
+  }
+ = currentGenerated;
 
     // Top-tier executive / engineer / forced templates don't swap (commercial / no-military tracks)
     const noSwap = template.genderLocked || template.forcedGender;

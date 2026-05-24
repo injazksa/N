@@ -553,10 +553,10 @@ function showProfessionDetails(profession) {
     const modal = document.getElementById('professionModal');
     professionModalScrollY = window.scrollY || document.documentElement.scrollTop || 0; // ✅ حفظ موضع التمرير
     modal.classList.remove('hidden');
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${professionModalScrollY}px`;
+    // document.body.style.position = 'fixed'; // Removed to prevent jump
+    
     document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('overflow-hidden');
 }
 
 function closeProfessionModal() {
@@ -564,8 +564,8 @@ function closeProfessionModal() {
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.width = '';
-    document.body.style.overflow = '';
-    window.scrollTo(0, professionModalScrollY); // ✅ استعادة موضع التمرير
+    document.body.classList.remove('overflow-hidden');
+    // window.scrollTo(0, professionModalScrollY); // Not needed if we don't fix position // ✅ استعادة موضع التمرير
 }
 
 function debounce(func, wait) {

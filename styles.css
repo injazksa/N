@@ -983,3 +983,5 @@ img {
 #professionModal .inline-block > div {
  scroll-behavior: smooth;
 }
+
+.overflow-hidden { overflow: hidden !important; }
