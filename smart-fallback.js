@@ -1,0 +1,1234 @@
+/**
+ * 🧠 Smart Fallback Search System (Task 12 + Universal Semantic Classifier)
+ * Saudia Visa Jordan — 2026
+ *
+ * v3.0 — Universal Rule-Based Taxonomy Classifier:
+ *  - 3-Tier Semantic Mapping (Academic/Mgmt → Supervisory/Technical → Vocational/Labor)
+ *  - Longest-prefix matching (multi-word phrases beat single words)
+ *  - Universal Safe Fallback (general visa template, NEVER broken state)
+ *  - Specialized compliance routes preserved (Medical/Driver/Domestic)
+ *  - Pre-search gender selector + Live gender switch
+ *  - Custom user title echoed at sheet header
+ */
+(function () {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════
+  // 📋 BASE DOCUMENT TEMPLATES — النصوص الصافية النهائية المعتمدة
+  // ═══════════════════════════════════════════════════════════════
+  const SECURITY = 'حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند).';
+  // ✅ الوثائق العسكرية فقط — دون تكرار الجواز/الصور (مُدمجة في بند الفحص الموحّد)
+  const MILITARY = 'الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء).';
+  const MILITARY_FULL = MILITARY;
+  const FEMALE_PERMISSION = 'عدم ممانعة من ولي الأمر (في حالة كانت متزوجة إحضار شهادة الزواج وعدم الممانعة من الزوج + صورة عن جواز سفر الزوج) (في حال كانت عزباء، إحضار عدم ممانعة من ولي الأمر + قيد فردي + صورة عن جواز سفر ولي الأمر).';
+  // 🔒 البند الموحّد: الفحص + البصمة + الجواز + الصور في سطر واحد لمنع التكرار نهائياً
+  const MEDICAL_BIO = 'عمل الفحص الطبي والبصمة لدى المراكز المعتمدة للسفارة السعودية (إحضار جواز السفر و 6 صور شخصية حديثة بخلفية بيضاء لكافة المعاملات).';
+  // نسخة العمالة والسياقة — بجواز السفر الجديد
+  const MEDICAL_BIO_NEW = 'عمل الفحص الطبي والبصمة لدى المراكز المعتمدة للسفارة السعودية (إحضار جواز السفر الجديد و 6 صور شخصية حديثة بخلفية بيضاء لكافة المعاملات).';
+  const PASSPORT = 'إحضار جواز السفر و 6 صور شخصية بخلفية بيضاء حديثة لكافة المعاملات.';
+  const PASSPORT_NEW = 'جواز السفر الجديد + صور شخصية عدد 2 بخلفية بيضاء.';
+  // 🛑 البند الختامي الإجباري — يجب أن يكون دائماً آخر بند في أي قائمة
+  const VACCINE  = 'الحصول على شهادة مطعوم السحايا.';
+  const AUTH     = 'عمل تفويض إلكتروني للمكتب.';
+  const CONTRACT = 'عقد عمل من الشركة السعودية + خطاب إطلاع مختومين من الغرفة التجارية والخارجية السعودية.';
+  const CONTRACT_ATTESTED = 'عقد عمل مصدق من الغرفة التجارية والخارجية السعودية.';
+  const CONTRACT_DOMESTIC = 'عقد عمل مصدق من الغرفة التجارية والخارجية السعودية.';
+  const QVP      = 'الحصول على شهادة الاعتماد المهني.';
+  const ATTEST   = 'ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه (مثل: حسن السيرة والسلوك، وشهادات الميلاد أو الزواج) من وزارة الخارجية الأردنية قبل تقديمها.';
+  const DEGREE   = 'إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل.';
+  const SCHOOL   = 'إحضار الشهادة المدرسية (الأصل).';
+  const DRIVER_LICENSE = 'صورة عن رخصة السياقة مختومة من إدارة الترخيص.';
+  // === ENGINEERING-SPECIFIC SHARED CONSTANTS (Strict Production Payload) ===
+  const ENG_DEGREE       = DEGREE;
+  const ENG_EXP_2Y       = 'خبرة لمدة سنتين بنفس مسمى التأشيرة.';
+  const ENG_EXP_1Y       = 'خبرة لمدة سنة واحدة بنفس مسمى التأشيرة.';
+  const ENG_EXP_NONE     = 'بدون اشتراط خبرة سابقة.';
+  const ENG_ACCRED       = QVP;
+  const ENG_MUSADAQA     = 'الحصول على شهادة من موقع مصادقة السعودي.';
+  const ENG_JEA          = 'عضوية + مزاولة مهنة من نقابة المهندسين الأردنية.';
+  const ENG_SCE          = 'التسجيل في هيئة المهندسين السعودية.';
+  const AUTH_OFFICE      = AUTH;
+  const SECONDARY_SCHOOL = 'إحضار شهادة الثانوية العامة (الأصل).';
+
+  const TEMPLATES = {
+    family_recruitment: {
+      label: 'مسار الاستقدام العائلي',
+      icon: 'fa-users',
+      reqs: [
+        SECURITY,
+        'شهادات الميلاد الأصلية للأولاد مصدقة من الأحوال والخارجية.',
+        'عقد الزواج أو شهادة الزواج أصلي مصدق (في حال كان عقد زواج يكون مختوم من قاضي القضاة والمحكمة الشرعية وخارجية أردنية).',
+        'عمل فحص طبي للزوجة من المختبر المعتمد لدى السفارة السعودية (صورة شخصية بخلفية بيضاء + جواز السفر). (إذا كان المولود فوق سن الـ 16 يجب إحضار فحص طبي له أيضاً).',
+        PASSPORT_NEW,
+        'إذا كان المولود أنثى فوق سن 16 إحضار شهادة خلو موانع من المحكمة الشرعية مصدقة من المحكمة وقاضي القضاة ووزارة الخارجية الأردنية.',
+        'صورة عن تأشيرة الاستقدام.',
+        'حجز موعد لدى مكتب تأشير.'
+      ]
+    },
+    executive: {
+      label: 'مسار الرئيس التنفيذي / مدير عام / مستثمر (سيادي)',
+      icon: 'fa-crown',
+      reqs: [
+        SECURITY,
+        'سجل تجاري ورخصة مهن.',
+        MEDICAL_BIO,
+        'عمل تفويض إلكتروني للمكتب من هيئة الاستثمار.',
+        VACCINE
+      ]
+    },
+    // 5. تصنيف المهن الطبية — ممارس بلس + DataFlow
+    medical: {
+      label: 'مسار الأطباء والكوادر الصحية',
+      icon: 'fa-stethoscope',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        DEGREE,
+        MEDICAL_BIO,
+        'خبرة بنفس مسمى التأشيرة.',
+        CONTRACT,
+        'شهادة التصنيف والتسجيل المهني من الهيئة السعودية للتخصصات الصحية (ممارس بلس).',
+        'تقرير التحقق من الشهادات والخبرات المهنية (DataFlow Report).',
+        AUTH,
+        VACCINE
+      ]
+    },
+    // 6. أستاذ تعليم عالي — ماجستير + تصديق الشهادات الجامعية
+    professor: {
+      label: 'مسار أستاذ التعليم العالي',
+      icon: 'fa-chalkboard-teacher',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        'إحضار الشهادة الجامعية (الماجستير) وكشف العلامات الأصل.',
+        'خبرة لمدة سنتين بنفس مسمى التأشيرة.',
+        MEDICAL_BIO,
+        'عقد عمل من الجامعة.',
+        QVP,
+        'تصديق الشهادات الجامعية.',
+        AUTH,
+        VACCINE
+      ]
+    },
+    // 1. تصنيف المدراء والأخصائيين والمندوبين
+    specialist: {
+      label: 'مسار المدراء والأخصائيين',
+      icon: 'fa-user-graduate',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        DEGREE,
+        MEDICAL_BIO,
+        ENG_EXP_2Y,
+        CONTRACT,
+        QVP,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // 2. تصنيف المهندسين — الحزمة الكاملة (نقابة + هيئة + مصادقة)
+    engineer: {
+      label: 'مسار المهندسين',
+      icon: 'fa-helmet-safety',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        DEGREE,
+        MEDICAL_BIO,
+        ENG_EXP_2Y,
+        CONTRACT,
+        ENG_ACCRED,
+        ENG_MUSADAQA,
+        ENG_JEA,
+        ENG_SCE,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // مندوب مبيعات / مشرف مكتب — نفس المدراء لكن الخبرة سنة واحدة
+    sales_rep: {
+      label: 'مسار مندوبي المبيعات',
+      icon: 'fa-handshake',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        DEGREE,
+        MEDICAL_BIO,
+        ENG_EXP_1Y,
+        CONTRACT,
+        QVP,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // مساعد إداري / مراقب جودة — ثانوية + سنة + بدون اعتماد مهني
+    intermediate_admin: {
+      label: 'مسار الكوادر المساعدة (الإداريين / المراقبة)',
+      icon: 'fa-clipboard-check',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        SECONDARY_SCHOOL,
+        MEDICAL_BIO,
+        ENG_EXP_1Y,
+        CONTRACT,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // بائع مباشر / منسق زهور
+    direct_sales: {
+      label: 'مسار البيع المباشر',
+      icon: 'fa-store',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        'إحضار شهادة الصف العاشر.',
+        'خبرة لمدة سنة واحدة بنفس مسمى التأشيرة.',
+        MEDICAL_BIO,
+        CONTRACT_ATTESTED,
+        AUTH,
+        VACCINE
+      ],
+      note: 'هذه المهنة لا تتطلب اعتماداً مهنياً في الوقت الحالي، وقد يطرأ تعديل على هذا الإجراء لاحقاً.'
+    },
+    // البائع / منسق الزهور — صف عاشر + اعتماد مهني
+    seller: {
+      label: 'مسار البائع / منسق الزهور',
+      icon: 'fa-cash-register',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        'إحضار شهادة الصف العاشر.',
+        'خبرة لمدة سنة واحدة بنفس مسمى التأشيرة.',
+        MEDICAL_BIO,
+        CONTRACT_ATTESTED,
+        QVP,
+        AUTH,
+        VACCINE
+      ]
+    },
+    supervisor: {
+      label: 'مسار الإشراف / رئيس قسم',
+      icon: 'fa-user-tie',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        DEGREE,
+        MEDICAL_BIO,
+        ENG_EXP_2Y,
+        CONTRACT,
+        QVP,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // 3. تصنيف المهن العمالية والفنية العامة
+    technical: {
+      label: 'مسار الفنيين / الحرفيين',
+      icon: 'fa-tools',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        SCHOOL,
+        MEDICAL_BIO_NEW,
+        CONTRACT_ATTESTED,
+        'التقديم على الاعتماد المهني السعودي.',
+        AUTH,
+        VACCINE
+      ]
+    },
+    // 3-ب. تصنيف المهن الحرفية (حلاق، طاهي، مصفف شعر، ميكانيكي...) — إلزامية مزاولة المهنة
+    crafts: {
+      label: 'مسار المهن الحرفية',
+      icon: 'fa-scissors',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        'إحضار الشهادة المدرسية (الأصل - شهادة الصف العاشر).',
+        'خبرة سنة واحدة بنفس مسمى التأشيرة.',
+        MEDICAL_BIO_NEW,
+        CONTRACT_ATTESTED,
+        'إحضار شهادة مزاولة مهنة.',
+        QVP,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // 3. تصنيف المهن العمالية العامة (عامل / تحميل وتنزيل ...)
+    labor: {
+      label: 'مسار العمالة التشغيلية',
+      icon: 'fa-people-carry-box',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        SCHOOL,
+        MEDICAL_BIO_NEW,
+        CONTRACT_ATTESTED,
+        'التقديم على الاعتماد المهني السعودي.',
+        AUTH,
+        VACCINE
+      ]
+    },
+    // عمالة لا تتطلب اعتماداً مهنياً (وضع ملصقات، تنظيف خزانات...)
+    labor_no_qvp: {
+      label: 'مسار العمالة التشغيلية',
+      icon: 'fa-people-carry-box',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        SCHOOL,
+        MEDICAL_BIO_NEW,
+        CONTRACT_ATTESTED,
+        AUTH,
+        VACCINE
+      ],
+      note: 'هذه المهنة لا تتطلب اعتماداً مهنياً في الوقت الحالي، وقد يُطلب الاعتماد المهني لها لاحقاً حسب تحديثات الأنظمة السعودية.'
+    },
+    // 4. تصنيف مهن السياقة
+    driver: {
+      label: 'مسار السائقين الخاصين',
+      icon: 'fa-car',
+      genderLocked: false,
+      reqs: [
+        SECURITY,
+        MILITARY,
+        SCHOOL,
+        MEDICAL_BIO_NEW,
+        CONTRACT_ATTESTED,
+        DRIVER_LICENSE,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // 7. مربية منزلية / عاملة منزلية — بدون اعتماد مهني
+    domestic_female: {
+      label: 'مسار العاملة المنزلية / المربية',
+      icon: 'fa-house-user',
+      forcedGender: 'female',
+      reqs: [
+        SECURITY,
+        FEMALE_PERMISSION,
+        SCHOOL,
+        MEDICAL_BIO_NEW,
+        CONTRACT_ATTESTED,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // عامل منزلي — بدون اعتماد مهني
+    domestic_male: {
+      label: 'مسار العامل المنزلي',
+      icon: 'fa-house-user',
+      forcedGender: 'male',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        SCHOOL,
+        MEDICAL_BIO_NEW,
+        CONTRACT_ATTESTED,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // المسار الإداري المكتبي (محاسب / موظف / سكرتير) — ضمن المدراء والأخصائيين
+    admin: {
+      label: 'المسار الإداري',
+      icon: 'fa-briefcase',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        DEGREE,
+        MEDICAL_BIO,
+        ENG_EXP_2Y,
+        CONTRACT,
+        QVP,
+        AUTH,
+        VACCINE
+      ]
+    },
+    // === UNIVERSAL SAFE FALLBACK ===
+    // الفئة الافتراضية: تتبع تصنيف المدراء والأخصائيين
+    general: {
+      label: 'المسار العام للتأشيرة (مدراء وأخصائيون)',
+      icon: 'fa-passport',
+      reqs: [
+        SECURITY,
+        MILITARY,
+        DEGREE,
+        MEDICAL_BIO,
+        ENG_EXP_2Y,
+        CONTRACT,
+        QVP,
+        AUTH,
+        VACCINE
+      ]
+    }
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🧠 UNIVERSAL SEMANTIC CLASSIFIER (v3.0)
+  // ───────────────────────────────────────────────────────────────
+  // Tier metadata:
+  //   • compliance: routes with regulator-specific docs (Medical, Driver, Domestic)
+  //   • management : Tier 1 — Academic & Upper Management (مسار الأخصائيين والمدراء)
+  //   • supervisory: Tier 2 — Supervisory & Technical Operations (مسار المشرفين والفنيين)
+  //   • vocational : Tier 3 — Vocational / Trade / Labor (مسار العمالة الحرفية)
+  //
+  // Order is critical: longer/more-specific keywords are listed first within each
+  // rule, and rules are evaluated top-to-bottom. The matcher uses longest-token
+  // matching to ensure "رئيس قسم" hits Supervisor (Tier 2) BEFORE "رئيس" hits
+  // Management (Tier 1).
+  // ═══════════════════════════════════════════════════════════════
+  const RULES = [
+    // ─── COMPLIANCE TIER (highest specificity — block generic fallback) ───
+    {
+      id: 'domestic_female', template: 'domestic_female', tier: 'compliance',
+      keywords: ['مربية أطفال', 'مربيه اطفال', 'عاملة منزلية', 'عامله منزليه', 'خادمة منزل', 'مدبرة منزل', 'مربية', 'مربيه', 'خادمة', 'خادمه']
+    },
+    {
+      id: 'domestic_male', template: 'domestic_male', tier: 'compliance',
+      keywords: ['عامل خدمة منزلية', 'عامل منزلي', 'خادم منزلي']
+    },
+    {
+      id: 'driver', template: 'driver', tier: 'compliance',
+      keywords: ['سائق خاص', 'سائق عائلة', 'سائق سيارة', 'سائق شاحنة', 'سائق', 'ساءق']
+    },
+    {
+      id: 'medical', template: 'medical', tier: 'compliance',
+      keywords: [
+        'استشاري طبي', 'طبيب أسنان', 'طبيب اسنان', 'علاج طبيعي', 'فيزيائي علاجي',
+        'طبيب', 'طبيبه', 'طبيبة', 'دكتور صيدلي', 'دكتور صيدلانية',
+        'صيدلي', 'صيدلاني', 'صيدلانيه', 'صيدلانية',
+        'جراح', 'ممرض', 'ممرضه', 'ممرضة', 'مسعف', 'مختبري',
+        'فني مختبر طبي', 'فني أشعة', 'فني اشعة'
+      ]
+    },
+    // 🏗️ ENGINEERING SECTOR — PROMOTED to compliance tier so it beats Technical's "صيانة"
+    // and Specialist's "مدير". Any input containing "مهندس" routes here with strict 11-doc payload.
+    {
+      id: 'engineer', template: 'engineer', tier: 'compliance',
+      keywords: [
+        'مهندس', 'مهندسه', 'مهندسة', 'مهندسين', 'مهندسات',
+        'م.', 'engineer'
+      ]
+    },
+
+    // ─── TIER 2: SUPERVISORY & TECHNICAL OPERATIONS ───
+    // (Must come BEFORE Tier 1 so "رئيس قسم" beats "رئيس")
+    {
+      id: 'supervisor', template: 'supervisor', tier: 'supervisory',
+      keywords: ['رئيس قسم', 'رئيس شيفت', 'مسؤول قسم', 'مشرف عام', 'مشرف إنتاج', 'مشرف انتاج', 'مشرف موقع', 'مشرف', 'مراقب', 'منسق', 'كبير']
+    },
+    {
+      id: 'technical', template: 'technical', tier: 'supervisory',
+      keywords: [
+        'فني صيانة', 'فني تكييف', 'فني تبريد', 'فني', 'مبرد', 'مكيف',
+        'تركيب', 'صيانة', 'مصلح'
+      ]
+    },
+
+    // ─── TIER 1: ACADEMIC & UPPER MANAGEMENT ───
+    // (Executive subgroup uses commercial track / no military)
+    {
+      id: 'executive', template: 'executive', tier: 'management',
+      keywords: ['رئيس تنفيذي', 'ceo', 'مدير عام', 'مستثمر']
+    },
+    // 🏗️ ENGINEERING SECTOR — STRICT RULE (BEFORE specialist so "مهندس" routes here)
+    // Already defined at compliance tier above — this duplicate is intentionally removed.
+    // 💼 Sales Rep — clones specialist baseline but with 1-year experience override
+    {
+      id: 'sales_rep', template: 'sales_rep', tier: 'management',
+      keywords: ['مندوب مبيعات', 'مندوبه مبيعات', 'مندوبة مبيعات', 'مندوب بيع', 'sales rep', 'مشرف مكتب', 'مشرفة مكتب', 'مشرف مكتبي']
+    },
+    // 🎓 Intermediate Admin / Quality Monitor — Secondary school + 1 year + NO QVP
+    {
+      id: 'intermediate_admin', template: 'intermediate_admin', tier: 'management',
+      keywords: ['مساعد إداري', 'مساعد اداري', 'مساعدة إدارية', 'مساعده اداريه',
+                 'مراقب الجودة', 'مراقب جودة', 'مراقبة الجودة', 'مراقبه جوده']
+    },
+    // 🛒 Direct Sales — Secondary school + NO experience + NO QVP
+    {
+      id: 'family_recruitment', template: 'family_recruitment', tier: 'management',
+      keywords: ['استقدام عائلي', 'استقدام عائلي', 'اقامة', 'أقامة', 'إقامة', 'زيارة عائلية']
+    },
+    {
+      id: 'direct_sales', template: 'direct_sales', tier: 'vocational',
+      keywords: ['بائع مباشر', 'بائعة مباشرة', 'بائعه مباشره', 'مندوب توزيع مباشر']
+    },
+    {
+      id: 'seller', template: 'seller', tier: 'vocational',
+      keywords: ['بائع', 'بائعه', 'بائعة', 'بائع متجول', 'بائع تجزئة', 'منسق زهور', 'منسقة زهور', 'بائع زهور', 'كاشير']
+    },
+    {
+      id: 'professor', template: 'professor', tier: 'compliance',
+      keywords: [
+        'أستاذ تعليم عالي', 'استاذ تعليم عالي', 'أستاذ جامعي', 'استاذ جامعي',
+        'أستاذ مساعد', 'استاذ مساعد', 'أستاذ مشارك', 'استاذ مشارك',
+        'بروفيسور', 'بروفسور', 'أستاذ دكتور', 'استاذ دكتور', 'عضو هيئة تدريس'
+      ]
+    },
+    {
+      id: 'specialist', template: 'specialist', tier: 'management',
+      keywords: [
+        'أخصائي', 'اخصائي', 'أخصائيه', 'أخصائية', 'اخصائية',
+        'دكتور', 'دكتوره', 'دكتورة',
+        'مستشار', 'مستشاره', 'مستشارة',
+        'خبير', 'خبيره', 'خبيرة',
+        'محلل', 'محلله', 'محللة',
+        'باحث', 'باحثه', 'باحثة',
+        'محامي', 'محامية',
+        'مدقق حسابات', 'مدقق',
+        'مصمم', 'مصممة', 'مبرمج', 'مبرمجة', 'مطور', 'مطورة', 'معماري',
+        'نائب', 'مدير', 'مديره', 'مديرة',
+        'رئيس'  // ← Tier 1 default for "رئيس" alone (after "رئيس قسم" matched in Tier 2)
+      ]
+    },
+
+    // ─── TIER 3: VOCATIONAL / TRADE / LABOR ───
+    {
+      id: 'labor_no_qvp', template: 'labor_no_qvp', tier: 'vocational',
+      keywords: [
+        'عامل وضع ملصقات', 'ملصقات',
+        'عامل تنظيف خزانات مياه', 'تنظيف خزانات'
+      ]
+    },
+    {
+      id: 'crafts', template: 'crafts', tier: 'supervisory',
+      keywords: [
+        'حلاق', 'حلاقة', 'حلاق رجالي', 'مزين',
+        'طاهي', 'طاهية', 'طبّاخ', 'طباخ', 'طباخه', 'طباخة', 'كوك', 'شيف', 'معلم طبخ',
+        'مصفف شعر', 'مصففة شعر', 'كوافير', 'كوافيره', 'خبير تجميل', 'خبيرة تجميل',
+        'ميكانيكي', 'ميكانيك', 'ميكانيكية', 'كهربائي سيارات', 'سمكري', 'بوياجي', 'دهان سيارات',
+        'نجار', 'نجار موبيليا', 'حداد', 'كهربائي', 'كهربائية', 'سباك', 'صحي', 'دهان', 'نقاش',
+        'بلاط', 'مبلط', 'بليط', 'لحام', 'صياغ', 'خياط', 'خياطة', 'ترزي',
+        'تكييف', 'تبريد', 'تمديدات', 'منجد', 'تنجيد', 'ديكور جبس', 'جبسون',
+        'خبّاز', 'خباز', 'حلواني', 'معجنات', 'جزار', 'صائغ', 'ساعاتي', 'مدلك', 'مدلكة'
+      ]
+    },
+    {
+      id: 'labor', template: 'labor', tier: 'vocational',
+      keywords: [
+        'عامل', 'عامله', 'عاملة', 'معاون', 'مساعد', 'مساعده', 'مساعدة',
+        'حمّال', 'حمال', 'منظف', 'منظفه', 'منظفة', 'حارس', 'حارسة',
+        'بستاني', 'بستانية', 'مزارع', 'مزارعة',
+        'سائس', 'راعي',
+        'كناس', 'ساعي', 'مراسل'
+      ]
+    },
+
+    // ─── OFFICE / ADMIN (Tier 1.5 — degreed but not specialist) ───
+    {
+      id: 'admin', template: 'admin', tier: 'management',
+      keywords: ['موظف استقبال', 'موظف خدمة عملاء', 'موظف', 'إداري', 'اداري',
+                 'سكرتير', 'سكرتيره', 'سكرتيرة', 'سكرتاريا',
+                 'محاسب', 'محاسبه', 'محاسبة', 'مدخل بيانات', 'كاتب', 'كاتبه']
+    }
+  ];
+
+  // Tier display labels (for badge in modal)
+  const TIER_LABELS = {
+    compliance:  { label: 'مسار متخصص', color: 'gold' },
+    management:  { label: 'مسار الأخصائيين والمدراء', color: 'blue' },
+    supervisory: { label: 'مسار المشرفين والفنيين', color: 'green' },
+    vocational:  { label: 'مسار العمالة الحرفية', color: 'amber' },
+    fallback:    { label: 'المسار العام', color: 'gray' }
+  };
+
+  function normalize(t) {
+    if (!t) return '';
+    return String(t)
+      .trim()
+      .replace(/[\u064B-\u0652\u0670]/g, '') // إزالة التشكيل (فتحة/ضمة/كسرة/شدة/سكون...)
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/[ةه]/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[ـ]/g, '')        // strip tatweel
+      .replace(/\s+/g, ' ')       // collapse whitespace
+      .toLowerCase();
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🧠 المحرك الصرفي البنيوي العام (Structural Morphological Classifier)
+  // ───────────────────────────────────────────────────────────────
+  // لا يعتمد على قوائم مغلقة، بل يحلّل بنية المسمى المهني العربي نفسه:
+  //   • البادئة الصرفية (مدير/أخصائي/فني/معلم/عامل...) تحدد القطاع
+  //   • الوزن الصرفي للحرف (فعّال: نجّار/حدّاد، فاعل: صائغ/حائك)
+  //   • السياق الدلالي للجذور كطبقة مساندة
+  // الهدف: فهم أي مسمى مهني صحيح كائناً ما كان دون السقوط على general.
+  // ═══════════════════════════════════════════════════════════════
+
+  // (أ) خريطة البادئات الصرفية → القطاع. هذه أوزان عربية وليست أسماء مهن،
+  // فأي مهنة تبدأ بها تُفهم تلقائياً مهما كان تخصصها بعد البادئة.
+  const PREFIX_SECTOR = [
+    // الإدارة العليا
+    { prefixes: ['رئيس تنفيذي','مدير عام','رئيس مجلس','رئيس شركه','مستثمر','شريك مؤسس'], template: 'executive' },
+    // الإدارة والإشراف
+    { prefixes: ['مدير','مديره','رئيس قسم','رئيس وحده','رئيس شعبه','رئيس فريق','رئيس','نائب مدير','مساعد مدير','مشرف','مشرفه','وكيل','قائد'], template: 'supervisor' },
+    // الاختصاصيون (جامعي + خبرة)
+    { prefixes: ['اخصائي','اخصائيه','استشاري','استشاريه','خبير','خبيره','محلل','محلله','باحث','باحثه','مستشار','مصمم','مصممه','مطور','مطوره','مهندس','معلم','معلمه','مدرس','استاذ','محاضر','مدرب','مدربه','مترجم','مترجمه','محرر','صحفي','اعلامي','ناقد','مخرج','مقيم','مقيّم','وسيط','محاسب','مدقق','مراجع','محامي','قاضي','اكتواري','احصائي','اقتصادي','امين'] , template: 'specialist' },
+    // الكتبة والإداريون المتوسطون
+    { prefixes: ['سكرتير','سكرتيره','كاتب','كاتبه','منسق','منسقه','مساعد اداري','موظف','موظفه','مدخل بيانات','مراقب','مفتش','مفتشه','محصل','جابي','كاشير','امين صندوق','امين مستودع'], template: 'intermediate_admin' },
+    // الطبية
+    { prefixes: ['طبيب','طبيبه','دكتور','جراح','صيدلي','صيدلانيه','ممرض','ممرضه','قابله','مسعف'], template: 'medical' },
+    // السياقة
+    { prefixes: ['سائق','سائقه','شوفير','سواق','قائد مركبه','قائد شاحنه','قائد حافله','ربان','مضيف طيران','طيار'], template: 'driver' },
+    // الفنيون والحرفيون
+    { prefixes: ['فني','فنيه','مصلح','مشغل','مشغّل','معلم بناء','نافخ','حفّار','حفار'], template: 'technical' },
+    { prefixes: ['صانع','صانعه','حرفي','معلم طبخ','معلم حلويات'], template: 'crafts' },
+    // العمالة
+    { prefixes: ['عامل','عامله','عمال','مساعد عام'], template: 'labor' },
+    // العاملات المنزليات
+    { prefixes: ['مربيه','جليسه','خادمه','مدبره منزل'], template: 'domestic_female' }
+  ];
+
+  // (ب) جذور دلالية موجزة للحالات التي تأتي فيها المهنة بكلمة واحدة دون بادئة
+  // صرفية واضحة (نجار، طبيب، صياد...). تُستخدم فقط إذا فشلت البادئة.
+  const ROOT_SECTOR = [
+    { template: 'medical', roots: ['طب','تمريض','اسنان','صيدل','بيطر','اشعه','تخدير','مختبر','جراح','علاج','تغذيه','بصريات','نفسي'] },
+    { template: 'engineer', roots: ['هندس','مهندس','معماري','انشائي','ميكاترونكس'] },
+    { template: 'specialist', roots: ['محاسب','محام','قاض','مترجم','صحفي','مصمم','مبرمج','تسويق','اعلام','قانون','بحث','تعليم','تدريب','اقتصاد','احصاء','رسام','نحات','خطاط','مصور','فنان','تحنيط','فلك','تامين','عقار'] },
+    { template: 'crafts', roots: ['نجار','حداد','كهرب','سباك','ميكانيك','دهان','نقاش','بلاط','لحام','خياط','تكييف','تبريد','صيان','حلاق','كوافير','مزين','صباغ','نساج','حائك','دباغ','خزاف','فخار','صائغ','ساعات','جوهر','زجاج','سمكر','خراط','صفيح','خباز','معجن','حلوان','طباخ','طاهي','شيف','جزار','عطور','تجميل','تدليك','مدلك','منجد','تنجيد','ترزي'] },
+    { template: 'technical', roots: ['فني','صياد','بحار','غواص','اطفائي','منقذ','عازف','موسيق','حفر','تعقيم','تحنيط حيوان','تركيب','صيانه'] },
+    { template: 'labor', roots: ['عامل','مزارع','زراع','فلاح','راع','رعي','بستان','عتال','تحميل','تنزيل','شحن','تفريغ','تعبئه','تغليف','فرز','مخزن','نظاف','تنظيف','فراش','مناول','نادل','غسيل','كي','قطف','قاطف','جني','جامع','حلاب','نحل','مناجم','جمع','لقط','حصاد','رعاه'] }
+  ];
+
+  // فحص تطابق البادئة (الكلمة الأولى أو بداية النص)
+  function matchPrefix(norm) {
+    const firstTok = norm.split(' ')[0];
+    let best = null;
+    for (const grp of PREFIX_SECTOR) {
+      for (const p of grp.prefixes) {
+        const np = normalize(p);
+        if (!np) continue;
+        // تطابق إذا بدأ النص بالبادئة، أو كانت الكلمة الأولى هي البادئة
+        const hit = norm.startsWith(np + ' ') || norm === np || firstTok === np ||
+                    (np.includes(' ') && norm.startsWith(np));
+        if (hit && (!best || np.length > best._len)) {
+          best = { template: grp.template, matched_keyword: p, _len: np.length };
+        }
+      }
+    }
+    if (best) { delete best._len; return best; }
+    return null;
+  }
+
+  // فحص الجذر الدلالي (لأي كلمة في النص)
+  function matchRoot(norm) {
+    let best = null;
+    for (const grp of ROOT_SECTOR) {
+      for (const r of grp.roots) {
+        const nr = normalize(r);
+        if (!nr) continue;
+        if (norm.includes(nr) && (!best || nr.length > best._len)) {
+          best = { template: grp.template, matched_keyword: r, _len: nr.length };
+        }
+      }
+    }
+    if (best) { delete best._len; return best; }
+    return null;
+  }
+
+  // الوزن الصرفي للحرف: "فعّال" (شدّة على العين) دلالة قوية على مهنة حرفية
+  // أمثلة: نجّار، حدّاد، خبّاز، حلّاق، نقّاش، بنّاء، سبّاك، لحّام، دبّاغ، خزّاف
+  function looksLikeCraft(original) {
+    // نفحص النص الأصلي قبل إزالة التشكيل للبحث عن الشدّة على الحرف الثاني
+    const w = String(original).trim().split(/\s+/)[0] || '';
+    // وزن فعّال: حرف + حرف + شدّة(ّ) + ا + حرف
+    if (/^.{1}.\u0651ا.$/.test(w) || /^.{2}\u0651ا./.test(w)) return true;
+    // أو ينتهي بـ "اف/ار/اك/ام/اغ/اش/اء" بعد جذر ثلاثي (تقريب للوزن دون تشكيل)
+    const n = normalize(w);
+    if (n.length >= 4 && n.length <= 6 && /(ار|اف|اك|ام|اغ|اش|اط|ان|از)$/.test(n)) return true;
+    return false;
+  }
+
+  // المُصنّف الصرفي البنيوي: يجرّب البادئة ← الجذر ← الوزن الصرفي
+  function smartClassifyByMorphology(norm, original) {
+    // 1) البادئة الصرفية (الأقوى — تحدد القطاع لأي مهنة)
+    const byPrefix = matchPrefix(norm);
+    if (byPrefix) return byPrefix;
+    // 2) الجذر الدلالي
+    const byRoot = matchRoot(norm);
+    if (byRoot) return byRoot;
+    // 3) الوزن الصرفي للحرف (فعّال → حرفي)
+    if (looksLikeCraft(original || norm)) {
+      return { template: 'crafts', matched_keyword: 'وزن حرفي' };
+    }
+    // 4) إن كان النص مكوّناً من كلمتين فأكثر ويبدأ بكلمة تشبه اسم فاعل (مـ...)
+    // نعتبره مهنة اختصاصية/إدارية عامة بدل السقوط
+    const firstTok = norm.split(' ')[0];
+    if (norm.split(' ').length >= 2 && /^م.{2,}/.test(firstTok)) {
+      return { template: 'specialist', matched_keyword: 'اسم فاعل مركّب' };
+    }
+    return null;
+  }
+
+  /**
+   * Universal Semantic Classifier — Longest-Prefix Match.
+   *
+   * Strategy: collect ALL keyword hits across all rules, then pick the rule
+   * whose matched keyword is LONGEST. This guarantees that:
+   *   - "رئيس قسم"     → Supervisor (Tier 2), NOT Specialist (Tier 1)
+   *   - "مدير عام"     → Executive (compliance), NOT Specialist
+   *   - "نائب رئيس"    → Specialist, NOT Executive (unless 'نائب رئيس تنفيذي')
+   *   - "عامل منزلي"   → Domestic Male, NOT Labor
+   *   - "طبيب أسنان"   → Medical, NOT Specialist
+   * If no explicit keyword matches, the morphological engine classifies the
+   * title semantically; only truly unrecognizable input falls to `general`.
+   */
+  function matchTemplate(userTitle) {
+    const norm = normalize(userTitle);
+    if (!norm) return { id: 'general', template: 'general', tier: 'fallback', matched_keyword: null };
+
+    let best = null;
+    for (const rule of RULES) {
+      for (const kw of rule.keywords) {
+        const nkw = normalize(kw);
+        if (!nkw) continue;
+        if (norm.includes(nkw)) {
+          if (!best || nkw.length > best._kwLen) {
+            best = { ...rule, matched_keyword: kw, _kwLen: nkw.length };
+          }
+        }
+      }
+    }
+    if (best) {
+      delete best._kwLen;
+      return best;
+    }
+
+    // 🧠 الطبقة الذكية: التصنيف الصرفي العام لأي مسمى مهني صحيح غير مدرج
+    const morph = smartClassifyByMorphology(norm, userTitle);
+    if (morph) {
+      return { id: morph.template, template: morph.template, tier: 'morphological', matched_keyword: morph.matched_keyword };
+    }
+
+    // ✅ Universal Safe Fallback — يصنّف بدل الرفض: أي مدخل صالح يحصل على أوراق
+    return { id: 'general', template: 'general', tier: 'fallback', matched_keyword: null };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🛡️ SMART INPUT VALIDATION — Profession Vocabulary Filter
+  // ───────────────────────────────────────────────────────────────
+  // Prevents garbage inputs ("أنا", "بيت", "حمار", "عمر", "ببسي") from
+  // generating fake document sheets. An input is accepted as a valid
+  // profession only if it meets one of these heuristics:
+  //
+  //   1. STRONG: input matches a keyword in RULES (e.g. "مهندس", "سائق")
+  //   2. MEDIUM: any token (word) in input is a known profession word
+  //              from the live `professions.json` vocabulary
+  //   3. WEAK : input contains a generic profession-class prefix word
+  //              (e.g. "مدرب", "موظف", "مشغل", "مسؤول") followed by
+  //              a qualifier — multi-token compound profession.
+  //
+  // The vocab is built lazily on first call by fetching /professions.json
+  // and adding every word from every name. Falls back gracefully if fetch
+  // fails (network/CORS), in which case validation defers to keyword-only.
+  // ═══════════════════════════════════════════════════════════════
+
+  // Profession-class prefix words: when input STARTS with these and has
+  // 2+ tokens total, we treat it as a legitimate compound profession even
+  // if no rule keyword matches (e.g. "مدرب يوغا", "موظف تجارة دولية").
+  const PROFESSION_PREFIXES = new Set([
+    'مدرب', 'مدرّب', 'مدربة', 'مدرّبة', 'مدربه',
+    'موظف', 'موظفة', 'موظفه',
+    'مشغل', 'مشغّل', 'مشغلة', 'مشغّلة',
+    'مسؤول', 'مسؤولة', 'مسئول', 'مسئولة',
+    'منسق', 'منسقة',
+    'مفتش', 'مفتشة',
+    'فاحص', 'فاحصة',
+    'متخصص', 'متخصصة',
+    'مختص', 'مختصة',
+    'محترف', 'محترفة'
+  ]);
+
+  let _vocabCache = null;     // built lazily
+  let _vocabPromise = null;   // in-flight fetch
+
+  function buildVocabFromRules() {
+    // Always-available baseline: every keyword from every rule
+    const v = new Set();
+    for (const rule of RULES) {
+      for (const kw of rule.keywords) {
+        const n = normalize(kw);
+        if (!n) continue;
+        for (const tok of n.split(/\s+/)) if (tok.length >= 2) v.add(tok);
+      }
+    }
+    for (const p of PROFESSION_PREFIXES) v.add(normalize(p));
+    return v;
+  }
+
+  async function loadProfessionVocab() {
+    if (_vocabCache) return _vocabCache;
+    if (_vocabPromise) return _vocabPromise;
+    const baseline = buildVocabFromRules();
+    _vocabPromise = fetch('/professions.json', { cache: 'force-cache' })
+      .then(r => r.ok ? r.json() : [])
+      .then(list => {
+        for (const p of list || []) {
+          const name = normalize(p.name_ar || p.profession_name_ar || '');
+          for (const tok of name.split(/\s+/)) if (tok.length >= 2) baseline.add(tok);
+        }
+        _vocabCache = baseline;
+        return baseline;
+      })
+      .catch(() => {
+        _vocabCache = baseline;
+        return baseline;
+      });
+    return _vocabPromise;
+  }
+
+  // Kick off vocab load early
+  if (typeof fetch === 'function') loadProfessionVocab();
+
+  /**
+   * Returns { valid: boolean, reason: string }.
+   * `valid=false` means the input does not look like a real profession.
+   */
+  function validateProfessionInput(userTitle) {
+    const norm = normalize(userTitle);
+    if (!norm) return { valid: false, reason: 'empty' };
+    if (norm.length < 3) return { valid: false, reason: 'too_short' };
+    
+    // Block generic titles that need more specificity
+    const genericTitles = ['مهندس', 'مهندسه', 'مدير', 'مديره', 'اخصائي', 'اخصائيه', 'فني', 'فنيه', 'مشرف', 'مشرفه', 'مندوب', 'مندوبه'];
+    if (genericTitles.includes(norm)) {
+        return { valid: false, reason: 'generic_title' };
+    }
+
+    // Reject pure numeric / punctuation
+    if (!/[\u0600-\u06FFa-z]/.test(norm)) return { valid: false, reason: 'no_letters' };
+
+    // 🛡️ HARD ANTI-ABUSE FIREWALL — block insults, pronouns, gibberish & fabricated titles
+    // These run BEFORE keyword matching so a banned phrase can't sneak in via a real keyword
+    // (e.g. "انا عامل مصري" contains the keyword "عامل" but must still be rejected).
+    const ABUSE_BLOCKLIST = [
+      // insults / profanity
+      'كلب', 'حمار', 'حيوان', 'خنزير', 'ملعون', 'لعنه', 'طيز', 'منيك', 'شرموط', 'شرموطه',
+      'عرص', 'قحبه', 'كس', 'زبي', 'زب', 'متناك', 'خرا', 'خره', 'غبي', 'احمق', 'حقير',
+      // pronouns / non-profession chatter
+      'انا ', 'انت ', 'احنا', 'هما', 'مين انا', 'شو', 'وين', 'ليش', 'كيفك', 'مرحبا', 'اهلا',
+      'امي', 'ابي', 'اخي', 'اختي', 'ابن', 'بنت',
+      // celebrities / non-jobs
+      'ميسي', 'رونالدو', 'بطيخ', 'مطرب', 'مغني', 'لاعب كره',
+      // fabricated / nonsensical compound titles
+      'مهندس بيت', 'مهندس انا', 'مهنه مجاري', 'مهندس مجاري', 'عامل مصري', 'عامل برميل',
+      'عامل تنين', 'عامل طوب', 'عامل زريعه', 'مهندسين كنادر', 'كندرجي'
+    ];
+    const padded = ' ' + norm + ' ';
+    for (const bad of ABUSE_BLOCKLIST) {
+      if (padded.includes(bad) || norm === bad.trim()) {
+        return { valid: false, reason: 'abuse' };
+      }
+    }
+
+    // Reject random Latin gibberish (e.g. "asdasd", "qwerty") with no Arabic
+    if (/^[a-z\s]+$/.test(norm) && !/^(ceo|engineer|sales rep)$/.test(norm)) {
+      return { valid: false, reason: 'no_match' };
+    }
+    // Reject same-letter spam or keyboard mashing (e.g. "ششششش", "ااااا", "اسسسسس")
+    const compact = norm.replace(/\s/g, '');
+    if (/^(.)\1{3,}$/.test(compact)) {
+      return { valid: false, reason: 'no_match' };
+    }
+    // Reject any token that contains 4+ of the same letter in a row (e.g. "اسسسسس")
+    if (/(.)\1{3,}/.test(compact)) {
+      return { valid: false, reason: 'no_match' };
+    }
+
+    // (1) STRONG: matches any RULES keyword
+    for (const rule of RULES) {
+      for (const kw of rule.keywords) {
+        if (norm.includes(normalize(kw))) return { valid: true, reason: 'rule_match' };
+      }
+    }
+
+    // (2) MEDIUM: any token is in the live profession vocab
+    const tokens = norm.split(/\s+/).filter(t => t.length >= 2);
+    const vocab = _vocabCache || buildVocabFromRules();
+    for (const tok of tokens) {
+      if (vocab.has(tok)) return { valid: true, reason: 'vocab_match' };
+    }
+
+    // (3) WEAK: starts with a profession-prefix and has 2+ tokens
+    if (tokens.length >= 2 && PROFESSION_PREFIXES.has(tokens[0])) {
+      return { valid: true, reason: 'prefix_compound' };
+    }
+
+    // (4) SMART: المحرك الصرفي يتعرّف على المسمى كمهنة صحيحة (مئات المهن غير المدرجة)
+    if (smartClassifyByMorphology(norm, userTitle)) {
+      return { valid: true, reason: 'morphological_match' };
+    }
+
+    return { valid: false, reason: 'no_match' };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🎨 UI: Quick-bar (already injected in HTML) + Modal Panel
+  // ═══════════════════════════════════════════════════════════════
+  let preSelectedGender = 'male'; // default
+
+  function injectFallbackPanel() {
+    if (document.getElementById('smart-fallback-panel')) return;
+    const trigger = document.getElementById('smart-fallback-trigger');
+    if (!trigger) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'smart-fallback-panel';
+    panel.className = 'hidden mt-3 bg-white border-2 border-gold/40 rounded-2xl p-4 sm:p-6 shadow-xl text-right';
+    panel.setAttribute('data-testid', 'smart-fallback-panel');
+    panel.innerHTML = `
+      <label for="smart-fallback-input" class="block text-navy font-bold mb-2 text-sm sm:text-base">
+        <i class="fas fa-keyboard text-gold ml-1"></i>
+        اكتب مسمى المهنة كما هو في تأشيرتك:
+      </label>
+      <input id="smart-fallback-input" type="text"
+        placeholder="مثال: سائق خاص / مربية منزلية / فني صيانة..."
+        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm sm:text-base focus:outline-none focus:border-gold transition-colors text-right"
+        data-testid="smart-fallback-input"
+        dir="rtl" />
+
+      <!-- Pre-search Gender Selector -->
+      <div class="mt-3 flex items-center gap-3 flex-wrap" data-testid="pre-gender-selector">
+        <span class="text-xs sm:text-sm text-gray-600 font-semibold">
+          <i class="fas fa-venus-mars text-gold ml-1"></i>
+          الجنس:
+        </span>
+        <div class="inline-flex rounded-lg overflow-hidden border-2 border-gold/30">
+          <button type="button" data-pre-gender="male"
+            class="pre-gender-btn px-3 py-1.5 text-xs sm:text-sm font-bold transition-all bg-gold text-white"
+            data-testid="pre-gender-male">
+            <i class="fas fa-mars ml-1"></i>ذكر
+          </button>
+          <button type="button" data-pre-gender="female"
+            class="pre-gender-btn px-3 py-1.5 text-xs sm:text-sm font-bold transition-all bg-white text-gray-700 hover:bg-gold/10"
+            data-testid="pre-gender-female">
+            <i class="fas fa-venus ml-1"></i>أنثى
+          </button>
+        </div>
+      </div>
+
+      <button id="smart-fallback-generate" type="button"
+        class="mt-4 w-full sm:w-auto px-6 py-3 bg-gold hover:bg-gold/90 text-white text-sm sm:text-base font-bold rounded-xl transition-all shadow-md inline-flex items-center justify-center gap-2"
+        data-testid="smart-fallback-generate">
+        <i class="fas fa-bolt"></i>
+        <span>توليد أوراق المهنة</span>
+      </button>
+
+      <!-- 📄 Inline Results Container -->
+      <div id="smart-fallback-results" class="hidden mt-6 border-t-2 border-gold/20 pt-6 animate-sf-fade-in"></div>
+
+      <!-- 🛡️ Validation error (hidden by default) -->
+	      <div id="smart-fallback-error" class="hidden mt-3 bg-amber-50 border-2 border-amber-300 text-amber-900 rounded-xl p-3 sm:p-4 text-sm sm:text-base"
+	           data-testid="smart-fallback-error" role="alert">
+	        <div class="flex items-start gap-2 sm:gap-3">
+	          <i class="fas fa-exclamation-triangle text-amber-600 text-lg mt-0.5 flex-shrink-0"></i>
+	          <div class="flex-1">
+	            <p id="error-title" class="font-bold mb-1">هذا لا يبدو كاسم مهنة معتمدة</p>
+	            <p id="error-desc" class="text-xs sm:text-sm leading-relaxed">يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>). إذا كنت متأكد من المسمى، تواصل معنا مباشرة عبر واتساب للتحقق.</p>
+	            <a href="https://wa.me/962789881009?text=أريد%20التحقق%20من%20مسمى%20مهنة" target="_blank" rel="noopener"
+	               class="mt-2 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-green-700 hover:text-green-800 transition">
+	              <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
+	            </a>
+	          </div>
+	        </div>
+	      </div>
+    `;
+
+    // Insert AFTER the quick-bar (which is right under search)
+    const quickbar = document.getElementById('smart-fallback-quickbar');
+    quickbar.parentNode.insertBefore(panel, quickbar.nextSibling);
+
+    // Wire events
+    trigger.addEventListener('click', togglePanel);
+    document.getElementById('smart-fallback-generate').addEventListener('click', generateFromInput);
+    document.getElementById('smart-fallback-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') generateFromInput();
+    });
+    document.querySelectorAll('.pre-gender-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        preSelectedGender = this.dataset.preGender;
+        document.querySelectorAll('.pre-gender-btn').forEach(b => {
+          if (b.dataset.preGender === preSelectedGender) {
+            b.classList.remove('bg-white', 'text-gray-700');
+            b.classList.add('bg-gold', 'text-white');
+          } else {
+            b.classList.remove('bg-gold', 'text-white');
+            b.classList.add('bg-white', 'text-gray-700');
+          }
+        });
+      });
+    });
+  }
+
+  function togglePanel() {
+    const panel = document.getElementById('smart-fallback-panel');
+    if (!panel) return;
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) {
+      const search = document.getElementById('searchInput');
+      const input = document.getElementById('smart-fallback-input');
+      // Sync gender from main filter
+      const mainGender = document.getElementById('genderFilter');
+      if (mainGender && (mainGender.value === 'male' || mainGender.value === 'female')) {
+        preSelectedGender = mainGender.value;
+        updateGenderButtons();
+      }
+      if (search && search.value && input && !input.value) {
+        input.value = search.value;
+      }
+      input.focus();
+      // Smooth scroll to panel
+      setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    }
+  }
+
+  function updateGenderButtons() {
+    document.querySelectorAll('.pre-gender-btn').forEach(b => {
+      if (b.dataset.preGender === preSelectedGender) {
+        b.classList.remove('bg-white', 'text-gray-700');
+        b.classList.add('bg-gold', 'text-white');
+      } else {
+        b.classList.remove('bg-gold', 'text-white');
+        b.classList.add('bg-white', 'text-gray-700');
+      }
+    });
+  }
+
+  function generateFromInput() {
+    const input = document.getElementById('smart-fallback-input');
+    const errorBox = document.getElementById('smart-fallback-error');
+    const userTitle = (input.value || '').trim();
+    // Hide any previous error
+    if (errorBox) errorBox.classList.add('hidden');
+
+    if (!userTitle) {
+      input.focus();
+      input.classList.add('border-red-500');
+      setTimeout(() => input.classList.remove('border-red-500'), 1500);
+      return;
+    }
+
+    // 🛡️ Smart Profession Validation
+    const check = validateProfessionInput(userTitle);
+    if (!check.valid) {
+      input.classList.add('border-red-500');
+      if (errorBox) {
+        const errorTitle = document.getElementById('error-title');
+        const errorDesc = document.getElementById('error-desc');
+        if (check.reason === 'generic_title') {
+            errorTitle.innerText = 'يرجى تحديد التخصص بدقة';
+            errorDesc.innerHTML = 'لقد كتبت مسمى عاماً جداً (مثل مهندس أو مدير). يرجى كتابة المسمى الكامل كما هو في التأشيرة (مثلاً: <strong>مهندس كهرباء</strong> أو <strong>مدير مبيعات</strong>).';
+        } else if (check.reason === 'abuse') {
+            errorTitle.innerText = 'إدخال غير صالح';
+            errorDesc.innerHTML = 'النص المُدخل لا يُمثّل مسمى مهنة معتمد. يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>).';
+        } else {
+            errorTitle.innerText = 'هذا لا يبدو كاسم مهنة معتمدة';
+            errorDesc.innerHTML = 'يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>).';
+        }
+        errorBox.classList.remove('hidden');
+        setTimeout(() => errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      }
+      setTimeout(() => input.classList.remove('border-red-500'), 2500);
+      // Analytics: track rejected input (helps grow vocab over time)
+      if (typeof window.fbq === 'function') {
+        try { window.fbq('trackCustom', 'SmartFallbackRejected', { query: userTitle, reason: check.reason }); } catch (e) {}
+      }
+      return;
+    }
+
+    const match = matchTemplate(userTitle);
+    const template = TEMPLATES[match.template];
+
+    // HOTFIX: Force gender if template specifies
+    let gender = preSelectedGender;
+    if (template.forcedGender) gender = template.forcedGender;
+
+    showGeneratedSheet(userTitle, template, match, gender);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 📄 GENERATED SHEET MODAL (Mobile-Optimized)
+  // ═══════════════════════════════════════════════════════════════
+  let currentGenerated = null;
+
+  
+  function showGeneratedSheet(userTitle, template, match, gender) {
+    currentGenerated = { userTitle, template, match, gender };
+    
+    const resultsContainer = document.getElementById('smart-fallback-results');
+    if (!resultsContainer) return;
+
+    resultsContainer.classList.remove('hidden');
+    // ✅ نتائج التوليد الذكي تظهر أسفل الزر مباشرة (Inline) دون إزاحة الصفحة
+    resultsContainer.innerHTML = `
+      <div class="bg-gray-50 rounded-2xl overflow-hidden border-2 border-gold/10 shadow-lg" dir="rtl">
+        <!-- Header -->
+        <div class="bg-navy text-white p-4 sm:p-6 flex justify-between items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-[10px] font-bold mb-1">
+              <i class="fas ${template.icon}"></i>
+              <span>${escapeHtml(template.label)}</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-bold">${escapeHtml(userTitle)}</h2>
+          </div>
+          <button onclick="window.closeGeneratedSheet()" class="text-white/50 hover:text-white transition" aria-label="إغلاق">
+            <i class="fas fa-times-circle text-xl"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 sm:p-6">
+          <h3 class="text-sm sm:text-base font-bold text-navy mb-3 flex items-center gap-2">
+            <i class="fas fa-clipboard-list text-gold"></i>
+            الأوراق والمستندات المطلوبة:
+          </h3>
+          <ol id="generated-sheet-list-inline" class="space-y-2 text-gray-800 text-sm sm:text-base">
+            <!-- Requirements injected here -->
+          </ol>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="bg-white p-4 flex flex-col sm:flex-row gap-2 border-t border-gray-100">
+          <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً، أحتاج للاستفسار عن مهنة: ' + userTitle)}"
+             target="_blank" rel="noopener nofollow"
+             class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition">
+            <i class="fab fa-whatsapp"></i>
+            <span>تأكيد واتساب</span>
+          </a>
+          <button onclick="window.printGeneratedSheet()"
+            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-navy hover:bg-navy/90 text-white text-sm font-bold rounded-xl transition">
+            <i class="fas fa-print"></i>
+            <span>طباعة الأوراق</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    renderRequirementsInline();
+
+    // تمرير لطيف لإظهار النتيجة أسفل الزر مباشرة دون قفز الصفحة للأعلى
+    setTimeout(() => {
+      resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 60);
+
+    // Pixel tracking
+    try {
+      if (window.fbq) {
+        window.fbq('trackCustom', 'SmartFallbackGenerate', {
+          user_title: userTitle,
+          gender: gender
+        });
+      }
+    } catch (e) {}
+  }
+
+  // 🛑 المُنفِّذ المركزي: تبديل الجنس + إزالة التكرار + ضمان أن مطعوم السحايا
+  // هو البند الختامي الإجباري الأخير في أي قائمة (مخزّنة أو مولّدة ذكياً).
+  function finalizeReqs(template, gender) {
+    const noSwap = template.genderLocked || template.forcedGender;
+    let reqs = template.reqs.map((req) =>
+      (!noSwap && gender === 'female' && (req.includes('الوثائق العسكرية') || req.includes('مشروحات من القيادة')))
+        ? FEMALE_PERMISSION : req
+    );
+    reqs = distinct(reqs).filter((r) => r !== PASSPORT);
+    // الاستقدام العائلي معاملة إقامة وليس تأشيرة عمل — لا يتطلب مطعوم السحايا
+    if (template.label && template.label.includes('الاستقدام العائلي')) {
+      return reqs.filter((r) => r !== VACCINE);
+    }
+    // إزالة أي ظهور لبند مطعوم السحايا ثم إعادته في النهاية كبند ختامي إجباري
+    reqs = reqs.filter((r) => r !== VACCINE);
+    reqs.push(VACCINE);
+    return reqs;
+  }
+
+  function renderRequirementsInline() {
+    if (!currentGenerated) return;
+    const list = document.getElementById('generated-sheet-list-inline');
+    if (!list) return;
+    const { template, gender } = currentGenerated;
+
+    const finalReqs = finalizeReqs(template, gender);
+
+    let html = finalReqs.map((r, i) => {
+      const cls = 'bg-white p-3 rounded-lg border border-gray-100';
+      return `<li class="${cls} flex gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-gold/10 text-gold rounded-full flex items-center justify-center text-xs font-bold">${i+1}</span>
+        <div class="flex-1 text-xs sm:text-sm">${escapeHtml(r)}</div>
+      </li>`;
+    }).join('');
+
+    // 📌 ملاحظة خارج البنود المرقومة (في الأسفل) — مثل ملاحظة الاعتماد المهني
+    if (template.note) {
+      html += `<li class="bg-blue-50 border-r-4 border-blue-400 p-3 rounded-lg list-none mt-2">
+        <div class="flex gap-2 text-xs sm:text-sm text-blue-900">
+          <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+          <span>${escapeHtml(template.note)}</span>
+        </div>
+      </li>`;
+    }
+
+    list.innerHTML = html;
+  }
+
+  // إغلاق النافذة بمفتاح Escape
+  function escClose(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) closeGeneratedSheet();
+  }
+
+  function closeGeneratedSheet() {
+    const resultsContainer = document.getElementById('smart-fallback-results');
+    if (resultsContainer) {
+      resultsContainer.classList.add('hidden');
+      resultsContainer.innerHTML = '';
+    }
+    // فك تجميد خلفية الصفحة
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', escClose);
+    currentGenerated = null;
+  }
+
+  function printGeneratedSheet() {
+    if (!currentGenerated) return;
+    const { userTitle, template, gender } = currentGenerated;
+    const finalReqs = finalizeReqs(template, gender);
+    if (typeof window.printProfessionDocument === 'function') {
+      window.printProfessionDocument('AUTO', userTitle, finalReqs);
+    }
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Remove duplicate requirement bullets while preserving order
+  function distinct(arr) {
+    const seen = new Set();
+    const out = [];
+    for (const item of arr) {
+      if (!seen.has(item)) { seen.add(item); out.push(item); }
+    }
+    return out;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════════
+  function init() {
+    injectFallbackPanel();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Expose handlers used by inline onclick attributes + debugging
+  window.printGeneratedSheet = printGeneratedSheet;
+  window.closeGeneratedSheet = closeGeneratedSheet;
+  window.smartFallback = { matchTemplate, TEMPLATES, RULES };
+})();
