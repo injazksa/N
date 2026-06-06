@@ -538,8 +538,8 @@ function toggleProfessionInline(card, profession) {
                 class="flex-1 bg-gold hover:bg-gold-light text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                 <i class="fas fa-print"></i> طباعة الأوراق
             </button>
-            <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً أريد الاستفسار عن: ' + name)}"
-               target="_blank" rel="noopener nofollow" onclick="event.stopPropagation()"
+            <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً Saudia-visa، أود الاستفسار عن إجراءات تأشيرة مهنة: ' + name + '.')}"
+               target="_blank" rel="noopener nofollow" data-keep-msg onclick="event.stopPropagation()"
                class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                 <i class="fab fa-whatsapp"></i> استفسار واتساب
             </a>

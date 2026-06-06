@@ -1619,3 +1619,135 @@
  init();
  }
 })();
+
+/* ════════════════════════════════════════════════════════════════
+   🧠 الذكاء المركزي للتواصل (Saudia-visa)
+   1) رسائل واتساب ذكية حسب الصفحة (تكشف من أين جاء العميل)
+   2) أزرار واتساب/اتصال عائمة في الصفحة الرئيسية فقط (للهاتف)
+   يعمل تلقائياً على كل صفحات الموقع لأن core.js محمّل في الجميع.
+   ════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  var WA_NUMBER = '962789881009';
+  var TEL_NUMBER = '+962789881009';
+  var BRAND = 'Saudia-visa';
+
+  // يحدّد نوع الصفحة الحالية ويبني الرسالة المناسبة
+  function buildContextMessage() {
+    var path = (location.pathname || '').toLowerCase();
+    var file = path.split('/').pop() || '';
+
+    // صفحة مهنة محددة داخل /p/
+    if (path.indexOf('/p/') !== -1) {
+      var prof = extractProfessionName();
+      if (prof) return 'مرحباً ' + BRAND + '، أود الاستفسار عن إجراءات تأشيرة مهنة: ' + prof + '.';
+      return 'مرحباً ' + BRAND + '، أبحث عن متطلبات مهنة معينة وأحتاج لمساعدتكم.';
+    }
+    // صفحة الاعتماد المهني
+    if (file.indexOf('professional') !== -1) {
+      return 'مرحباً ' + BRAND + '، أود الاستفسار عن متطلبات الاعتماد المهني QVP.';
+    }
+    // صفحة التصديقات
+    if (file.indexOf('certificate') !== -1) {
+      return 'مرحباً ' + BRAND + '، أود الاستفسار عن إجراءات تصديق الشهادات.';
+    }
+    // صفحة المهن العامة (قبل الاختيار)
+    if (file.indexOf('professions') !== -1) {
+      return 'مرحباً ' + BRAND + '، أبحث عن متطلبات مهنة معينة وأحتاج لمساعدتكم.';
+    }
+    // الصفحة الرئيسية أو أي صفحة عامة
+    return 'مرحباً ' + BRAND + '، لدي استفسار حول خدمات المكتب المعتمدة.';
+  }
+
+  // يستخرج اسم المهنة من عنوان صفحة /p/ (يزيل "تأشيرة عمل" و"السعودية")
+  function extractProfessionName() {
+    var h1 = document.querySelector('h1');
+    var raw = (h1 && h1.textContent ? h1.textContent : document.title) || '';
+    raw = raw.replace(/تأشيرة عمل/g, '')
+             .replace(/السعودية/g, '')
+             .replace(/\|.*$/, '')
+             .replace(/الأوراق المطلوبة/g, '')
+             .replace(/\s+/g, ' ')
+             .trim();
+    return raw;
+  }
+
+  // يحدّث كل روابط الواتساب في الصفحة بالرسالة الذكية —
+  // إلا ما كان يحمل رسالة مخصّصة بالفعل (data-keep-msg) مثل أزرار المهن الديناميكية
+  function updateWhatsAppLinks(message) {
+    var encoded = encodeURIComponent(message);
+    var links = document.querySelectorAll('a[href*="wa.me/"], a[href*="api.whatsapp.com"]');
+    links.forEach(function (a) {
+      if (a.hasAttribute('data-keep-msg')) return; // اترك الرسائل المخصّصة
+      var href = a.getAttribute('href') || '';
+      var base = href.split('?')[0];
+      // أبقِ الرقم كما هو، استبدل/أضف نص الرسالة فقط
+      if (base.indexOf('wa.me/') !== -1 || base.indexOf('whatsapp.com') !== -1) {
+        a.setAttribute('href', base + '?text=' + encoded);
+      }
+    });
+  }
+
+  // ينشئ الأزرار العائمة (واتساب + اتصال) — للصفحة الرئيسية فقط، على الهاتف
+  function injectFloatingButtons(message) {
+    var path = (location.pathname || '').toLowerCase();
+    var file = path.split('/').pop() || '';
+    var isHome = path === '/' || file === '' || file === 'index.html';
+    var isProfessionPage = path.indexOf('/p/') !== -1; // صفحات المهن الفردية بلا أزرار تواصل
+    if (!isHome && !isProfessionPage) return;     // الرئيسية وصفحات المهن فقط
+    if (document.getElementById('sv-floating-contact')) return; // عدم التكرار
+    // إن كانت الصفحة تملك أصلاً أزرار تواصل عائمة (مثل الرئيسية) لا نكرّرها —
+    // نكتفي بأن الذكاء المركزي حدّث رسالتها تلقائياً.
+    if (document.querySelector('[data-testid="floating-whatsapp"], [data-testid="floating-call"]')) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'sv-floating-contact';
+    wrap.setAttribute('aria-label', 'تواصل سريع');
+    wrap.innerHTML =
+      '<a href="https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(message) + '"' +
+      ' target="_blank" rel="noopener" class="sv-fab sv-fab-wa" aria-label="تواصل واتساب">' +
+      '<i class="fab fa-whatsapp"></i></a>' +
+      '<a href="tel:' + TEL_NUMBER + '" class="sv-fab sv-fab-call" aria-label="اتصال هاتفي">' +
+      '<i class="fas fa-phone"></i></a>';
+    document.body.appendChild(wrap);
+  }
+
+  // أنماط الأزرار العائمة (تُحقن مرة واحدة) — متجاوبة لكل الأحجام
+  function injectFloatingStyles() {
+    if (document.getElementById('sv-floating-style')) return;
+    var css =
+      '#sv-floating-contact{position:fixed;bottom:18px;left:18px;z-index:9998;' +
+      'display:flex;flex-direction:column;gap:12px;}' +
+      '#sv-floating-contact .sv-fab{width:56px;height:56px;border-radius:50%;' +
+      'display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;' +
+      'box-shadow:0 6px 18px rgba(0,0,0,.25);transition:transform .2s ease,box-shadow .2s ease;' +
+      'text-decoration:none;}' +
+      '#sv-floating-contact .sv-fab:hover{transform:scale(1.08);box-shadow:0 8px 22px rgba(0,0,0,.32);}' +
+      '#sv-floating-contact .sv-fab-wa{background:#25D366;}' +
+      '#sv-floating-contact .sv-fab-call{background:#1B2A41;}' +
+      '#sv-floating-contact .sv-fab i{line-height:1;}' +
+      /* على الشاشات الكبيرة نصغّر قليلاً ونبقيها أنيقة */
+      '@media(min-width:768px){#sv-floating-contact{bottom:24px;left:24px;}' +
+      '#sv-floating-contact .sv-fab{width:52px;height:52px;font-size:22px;}}' +
+      /* لا تظهر عند الطباعة */
+      '@media print{#sv-floating-contact{display:none!important;}}';
+    var style = document.createElement('style');
+    style.id = 'sv-floating-style';
+    style.appendChild(document.createTextNode(css));
+    document.head.appendChild(style);
+  }
+
+  function runContactIntelligence() {
+    var message = buildContextMessage();
+    updateWhatsAppLinks(message);
+    injectFloatingStyles();
+    injectFloatingButtons(message);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runContactIntelligence);
+  } else {
+    runContactIntelligence();
+  }
+})();

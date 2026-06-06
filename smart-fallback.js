@@ -1028,7 +1028,7 @@
 	          <div class="flex-1">
 	            <p id="error-title" class="font-bold mb-1">هذا لا يبدو كاسم مهنة معتمدة</p>
 	            <p id="error-desc" class="text-xs sm:text-sm leading-relaxed">يرجى كتابة اسم مهنة حقيقي كما يظهر في تأشيرة العمل (مثال: <strong>سائق خاص</strong>، <strong>مهندس مدني</strong>، <strong>طاهي</strong>). إذا كنت متأكد من المسمى، تواصل معنا مباشرة عبر واتساب للتحقق.</p>
-	            <a href="https://wa.me/962789881009?text=أريد%20التحقق%20من%20مسمى%20مهنة" target="_blank" rel="noopener"
+	            <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً Saudia-visa، أبحث عن متطلبات مهنة معينة وأحتاج لمساعدتكم.')}" target="_blank" rel="noopener" data-keep-msg
 	               class="mt-2 inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-green-700 hover:text-green-800 transition">
 	              <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
 	            </a>
@@ -1198,8 +1198,8 @@
 
         <!-- Footer Actions -->
         <div class="bg-white p-4 flex flex-col sm:flex-row gap-2 border-t border-gray-100">
-          <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً، أحتاج للاستفسار عن مهنة: ' + userTitle)}"
-             target="_blank" rel="noopener nofollow"
+          <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً Saudia-visa، أود الاستفسار عن إجراءات تأشيرة مهنة: ' + userTitle + '.')}"
+             target="_blank" rel="noopener nofollow" data-keep-msg
              class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition">
             <i class="fab fa-whatsapp"></i>
             <span>تأكيد واتساب</span>
