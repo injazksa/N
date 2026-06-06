@@ -324,17 +324,36 @@
 }
 </script>
 </head>
-<body class="font-arabic bg-gray-50 text-slate-900">
+ <body class="font-arabic bg-gray-50 text-slate-900">
+ 
+ <!-- Mobile Quick Contact Bar (Visible only on mobile top) -->
+ <div class="lg:hidden bg-navy-dark text-white py-2 px-4 flex justify-between items-center border-b border-gold/30 sticky top-0 z-[60]">
+ <div class="flex gap-4">
+ <a href="tel:+962789881009" class="flex items-center gap-2 text-xs font-bold">
+ <i class="fas fa-phone-alt text-gold"></i>
+ <span>اتصل بنا</span>
+ </a>
+ <a href="https://wa.me/962789881009" class="flex items-center gap-2 text-xs font-bold">
+ <i class="fab fa-whatsapp text-green-400"></i>
+ <span>واتساب</span>
+ </a>
+ </div>
+ <div class="text-[10px] text-gray-300">
+ <i class="fas fa-map-marker-alt text-gold ml-1"></i>
+ الدوار الأول، جبل عمان
+ </div>
+ </div>
  
  <!-- Floating Action Buttons - WhatsApp & Call -->
- <div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3" style="position: fixed !important; bottom: 24px !important; left: 24px !important; z-index: 9999 !important; direction: ltr;">
+ <!-- Floating Action Buttons - WhatsApp & Call (Visible on all devices, optimized for mobile) -->
+ <div class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-4 sm:bottom-8 sm:right-8" style="position: fixed !important; bottom: 24px !important; right: 24px !important; z-index: 9999 !important;">
  <!-- WhatsApp Button -->
  <a href="https://wa.me/962789881009?text=مرحباً، أحتاج مساعدة في استخراج تأشيرة عمل سعودية"
  target="_blank"
  rel="noopener noreferrer"
  data-testid="floating-whatsapp"
  title="تواصل معنا عبر واتساب"
- class="group w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 hover:-translate-y-1 relative">
+ class="group w-16 h-16 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(34,197,94,0.4)] hover:scale-110 transition-all duration-300 hover:-translate-y-1 relative">
  <i class="fab fa-whatsapp text-2xl relative z-10"></i>
  <span class="absolute inset-0 rounded-full bg-green-400 opacity-75 animate-ping"></span>
  </a>
@@ -343,13 +362,13 @@
  <a href="tel:+962789881009"
  data-testid="floating-call"
  title="اتصل بنا مباشرة"
- class="group w-14 h-14 bg-gold hover:bg-yellow-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 hover:-translate-y-1">
+ class="group w-16 h-16 bg-gold hover:bg-yellow-600 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(201,162,106,0.4)] hover:scale-110 transition-all duration-300 hover:-translate-y-1">
  <i class="fas fa-phone-alt text-xl relative z-10"></i>
  </a>
  </div>
  
  <!-- Header / Navigation -->
- <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-gray-100 shadow-sm">
+ <header class="sticky top-0 lg:top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-gray-100 shadow-sm">
  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <div class="flex items-center justify-between h-16">
  <!-- Logo with Image -->
