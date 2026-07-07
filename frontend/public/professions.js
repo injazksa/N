@@ -310,9 +310,11 @@ function classifyProfession(inputName) {
             finalReqs.splice(2, 0, "إحضار شهادة الصف العاشر", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
             // NO accreditation for these
         } else {
+            // 🔗 مندوب مبيعات / مندوب مشتريات → نفس أوراق (أخصائي تسويق) تماماً
+            // الفرق الوحيد: مندوب المبيعات خبرة سنة واحدة، والمشتريات سنتين
             role = "Sales / Purchasing Representative";
-            const expYears = normName.includes("مشتريات") ? "سنتين" : "سنة";
-            finalReqs.splice(2, 0, "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل", `خبرة لمدة ${expYears} بنفس مسمى التأشيرة`);
+            const expYears = normName.includes("مشتريات") ? "سنتين" : "سنة واحدة";
+            finalReqs.splice(2, 0, "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل", `خبرة لمدة ${expYears} بنفس مسمى التأشيرة`, "الحصول على شهادة الاعتماد المهني");
         }
     }
     // 7. CRAFTS & PERSONAL SERVICES
@@ -326,15 +328,27 @@ function classifyProfession(inputName) {
             finalReqs.splice(2, 0, "إحضار الشهادة المدرسية (الأصل)", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة", "شهادة مزاولة مهنة", "الحصول على شهادة الاعتماد المهني");
         }
     }
-    // 8. GENERAL LABOUR SECTOR
+    // 8. GENERAL LABOUR SECTOR — نفس أوراق (عامل تحميل وتنزيل) تماماً دون بند التصديقات المرقم،
+    // ولأن شرط الفحص المهني غير محدد بعد لهذه المهن تظهر ملاحظة التحقق خارج البنود المرقمة
     else if (normName.includes("عامل") || normName.includes("تحميل") || normName.includes("تنزيل") || normName.includes("تغليف") || normName.includes("مخزن") || normName.includes("تنظيف") || normName.includes("فراش")) {
-        category = "العمال";
-        role = "General Labour Sector";
-        finalReqs = finalReqs.filter(r => !r.includes("الثانوية العامة") && !r.includes("دبلوم"));
-        finalReqs.splice(2, 0, ...DOCS.LABOUR_ADDON);
-        if (!normName.includes("ملصقات") && !normName.includes("تنظيف خزانات")) {
-            // No accreditation for generic labor
-        }
+        return {
+            name_ar: inputName,
+            profession_name_ar: inputName,
+            code: "---",
+            category: "العمال",
+            role: "General Labour Sector",
+            requirements: [
+                "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند).",
+                "الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء).",
+                "إحضار الشهادة المدرسية (الأصل).",
+                "عمل الفحص الطبي والبصمة لدى المراكز المعتمدة للسفارة السعودية (إحضار جواز السفر الجديد و 6 صور شخصية حديثة بخلفية بيضاء لكافة المعاملات).",
+                "عقد عمل مصدق من الغرفة التجارية والخارجية السعودية.",
+                "عمل تفويض إلكتروني للمكتب.",
+                "الحصول على شهادة مطعوم السحايا."
+            ],
+            note: "يرجى التواصل مع خدمة العملاء مباشرة للتحقق من مدى حاجتكم لاعتماد الفحص المهني لهذه المهنة وتأكيد الإجراءات المحدثة.",
+            isAiGenerated: true
+        };
     }
     // 9. FAMILY RECRUITMENT
     else if (normName.includes("استقدام") || normName.includes("اقامة") || normName.includes("أقامة") || normName.includes("زيارة")) {
@@ -521,12 +535,21 @@ function computeRequirements(profession) {
         else requirements.splice(1, 0, femaleReq);
     }
 
+    // 📌 فصل الملاحظات والتنبيهات عن البنود المرقمة — تُعرض خارج القائمة كملحوظة مستقلة
+    let note = profession.note || '';
+    const noteItems = requirements.filter(r => /^\s*ملاحظة/.test(r));
+    if (noteItems.length) {
+        requirements = requirements.filter(r => !/^\s*ملاحظة/.test(r));
+        const cleaned = noteItems.map(n => n.replace(/^\s*ملاحظة(\s+هامة\s+جداً)?\s*[:：]?\s*/, '').trim());
+        note = [note].concat(cleaned).filter(Boolean).join(' • ');
+    }
+
     const VACCINE_ITEM = "الحصول على شهادة مطعوم السحايا.";
     const isFamilyRecruitment = name.includes("استقدام") || name.includes("اقامة") || name.includes("إقامة") || code === "FAMILY";
     requirements = requirements.filter(r => r.replace(/\s+/g, ' ').trim() !== VACCINE_ITEM);
     if (!isFamilyRecruitment) requirements.push(VACCINE_ITEM);
 
-    return { name, code, requirements, note: profession.note || '' };
+    return { name, code, requirements, note };
 }
 
 // 🔽 يعرض/يطوي الأوراق المطلوبة تحت بطاقة المهنة مباشرة (Inline)
@@ -630,12 +653,13 @@ function showProfessionDetails(profession) {
 
     // ملاحظة خارج البنود (مثل بائع مباشر)
     const noteEl = document.getElementById('modalNoteBox');
-    if (noteEl) {
+    const noteContainer = document.getElementById('modalNoteContainer');
+    if (noteEl && noteContainer) {
         if (note) {
             noteEl.textContent = note;
-            noteEl.parentElement.classList.remove('hidden');
+            noteContainer.classList.remove('hidden');
         } else {
-            noteEl.parentElement.classList.add('hidden');
+            noteContainer.classList.add('hidden');
         }
     }
 
