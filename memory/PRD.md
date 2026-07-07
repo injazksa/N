@@ -1,22 +1,39 @@
-# PRD - مشروع إنجاز (EnjazKSA)
+# PRD - موقع مكتب تأشيرات السعودية (SAUDIA1010 / saudia-visa.com)
 
-## ما تم تنفيذه - 5 مراحل
+## بيان المشروع
+موقع ثابت (HTML/JS/Tailwind) لمكتب تأشيرات السعودية المعتمد في الأردن، مستضاف على Netlify.
+الكود المعتمد: النسخة المرفوعة رقم 17 (تم استبدال الكود القديم بها في /app/frontend/public بتاريخ 2026-06-16).
+خطوط حمراء دائمة: ممنوع تغيير التصميم/الواجهات، ممنوع تأليف محتوى، الحفاظ على نظام الأوراق، الحفاظ على زحف بوتات AI وجوجل 100%.
 
-### المرحلة 1 - أمان: XSS, ReDoS, CSP, HSTS, file blocking
-### المرحلة 2 - SEO: Canonical tags (12 صفحة), sitemap, robots.txt
-### المرحلة 3 - سرعة: preconnect/prefetch, Schema markup, Decap CMS
-### المرحلة 4 - AI: llms.txt, 18 AI bots, AI meta tags, semantic content
-### المرحلة 5 - صفحة الشركات السعودية (corporate.html)
+## ما تم تنفيذه
 
-**صفحة جديدة**: `corporate.html` - صفحة مخصصة للشركات السعودية وأصحاب العمل
-- نفس الهوية البصرية (navy + gold + Alexandria font)
-- Schema markup خاص (Service + LocalBusiness)
-- AI meta tags محسّنة لاستقدام الموظفين
-- أقسام: لماذا نحن + خدمات الشركات + آلية العمل + CTA
-- مضافة في: sitemap.xml, _redirects, netlify.toml, llms.txt
-- رابط نظيف: saudia-visa.com/corporate
+### جلسات سابقة
+- أمان: XSS, ReDoS, CSP, HSTS + SEO: Canonical, sitemap, robots + llms.txt لبوتات AI
+- صفحة الشركات corporate.html + إصلاح الخريطة + Decap CMS (admin-secure)
+
+### 2026-06-16 — إصلاحات فحص الموقع (Site Audit) — مكتمل ومُختبر 100%
+1. **الصفحات اليتيمة (Orphan Pages)**: 
+   - توليد 20 صفحة دليل مقسّمة تصاعدياً حسب رمز المهنة: `/p/dalil-1.html` → `/p/dalil-20.html` (978 رابط HTML نصي لكل صفحات المهن، 50/صفحة)
+   - روابط ترقيم كاملة بين صفحات الدليل + rel prev/next + canonical
+   - nav مخفي بصرياً (روابط نصية للعناكب) داخل professions.html يشير للـ 20 صفحة — بدون أي تغيير مرئي
+   - إضافة صفحات الدليل إلى sitemap.xml + قسم في llms.txt لبوتات AI
+2. **توحيد بحث المهندسين + التطابق الجزئي**:
+   - أي مسمى يبدأ بـ"مهندس" (معماري/مدني/كهرباء/صناعي/ميكاترونكس...) → نفس مصفوفة أوراق "مهندسين" الموحدة (12 بند: نقابة + هيئة + مصادقة...) في البحث الرئيسي (professions.js) والبحث الذكي (smart-fallback.js matchTemplate)
+   - التطابق الجزئي: زهور → منسق زهور، هاتفي → بائع هاتفي (resolvePartial + PARTIAL_ALIASES)، مياه → نتائج قاعدة البيانات
+3. **Noindex في Sitemap**: حذف privacy.html + terms.html + disclaimer.html من sitemap.xml (بقيت noindex)
+4. **العناوين وH1**: تقصير 450 عنوان تلقائياً ≤ 60 حرف (قالب المهن + صفحات pillar) + إصلاح 18 عنواناً بأسطر متعددة. فحص H1: لا توجد أي صفحة بأكثر من H1 واحد (0 صفحة)
+- رفع إصدار service-worker إلى v2.2.0 لكسر الكاش
+- نقل netlify.toml من public إلى جذر /app مع publish="frontend/public" (منع تعارض البناء)
+- اختبار شامل بوكيل الاختبار: iteration_3.json — نجاح 100%
 
 ## Backlog
-- [ ] تفعيل Netlify Identity
-- [ ] لوحة تحكم مخصصة A-Z
-- [ ] تحويل Tailwind من CDN لبناء محلي
+- [ ] تفعيل Netlify Identity ليتمكن المالك من دخول لوحة التحكم /admin-secure (يحتاج خطوات من لوحة Netlify)
+- [ ] معالجة 32 مهنة في professions.json لها slug لا يطابق ملف الصفحة (أسماء مُخربطة الترتيب مثل "المعلومات والاتصالاتأخصائي...")
+- [ ] تقسيم smart-fallback.js (1400+ سطر) إلى وحدات أصغر
+- [ ] توحيد الناف بار المكرر في 13 صفحة عبر build step
+
+## ملاحظات تقنية
+- لا يوجد باكند — موقع ثابت 100%، الاختبار عبر preview URL
+- الأدلة تُولَّد عبر /app/scripts/seo_fixes2.py (يعاد تشغيله عند إضافة مهن جديدة)
+- اللغة: الرد على المستخدم بالعربية دائماً
+- النشر: "Save to GitHub" ثم Clear cache and deploy من Netlify
