@@ -1,17 +1,9 @@
-// Professions Page JavaScript
 let professionsData = [];
+let filteredData = [];
+let renderedCount = 0;
+const BATCH_SIZE = 30;
 let currentProfession = null;
-
-// Security: HTML Sanitization Helper
-function sanitizeForHTML(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
+let professionModalScrollY = 0; // ✅ حفظ موضع التمرير عند فتح النافذة
 
 // Load professions data on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -28,6 +20,26 @@ document.addEventListener('DOMContentLoaded', function() {
     if (categoryFilter) {
         categoryFilter.addEventListener('change', filterProfessions);
     }
+
+    // Gender filter event listener
+    const genderFilter = document.getElementById('genderFilter');
+    if (genderFilter) {
+        genderFilter.addEventListener('change', filterProfessions);
+    }
+
+    // ⚡ Event delegation للكروت
+    const grid = document.getElementById('professionsGrid');
+    if (grid) {
+        grid.addEventListener('click', function(e) {
+            const card = e.target.closest('[data-prof-idx]');
+            if (!card) return;
+            // تجاهل النقرات داخل منطقة الأوراق المفتوحة (X، طباعة، واتساب)
+            if (e.target.closest('.prof-inline-details')) return;
+            const idx = parseInt(card.dataset.profIdx, 10);
+            const source = filteredData.length ? filteredData : professionsData;
+            if (source[idx]) toggleProfessionInline(card, source[idx]);
+        });
+    }
 });
 
 // Load professions from JSON file
@@ -36,98 +48,56 @@ async function loadProfessions() {
         const response = await fetch('professions.json');
         const data = await response.json();
         professionsData = data;
-        
+        filteredData = data;
+
+        // 🔗 دعم روابط الفوتر الذكية: قراءة ?category= و ?search= من الرابط للفلترة المسبقة
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const cat = params.get('category');
+            const q = params.get('search');
+            const catSel = document.getElementById('categoryFilter');
+            const searchInput = document.getElementById('searchInput');
+            if (cat && catSel) {
+                for (const opt of catSel.options) {
+                    if (opt.value === cat) { catSel.value = cat; break; }
+                }
+            }
+            if (q && searchInput) searchInput.value = q;
+            if ((cat && catSel && catSel.value === cat) || q) {
+                filterProfessions();
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('professionsGrid').classList.remove('hidden');
+                return;
+            }
+        } catch (e) {}
+
         displayProfessions(professionsData);
         document.getElementById('loadingState').classList.add('hidden');
         document.getElementById('professionsGrid').classList.remove('hidden');
     } catch (error) {
-        // Error handled silently in production
-        document.getElementById('loadingState').innerHTML = `
-            <div class="text-center py-20">
-                <i class="fas fa-exclamation-triangle text-6xl text-red-400 mb-4"></i>
-                <h3 class="text-2xl font-bold text-navy mb-2">حدث خطأ في تحميل البيانات</h3>
-                <p class="text-gray-600 mb-6">يرجى تحديث الصفحة أو المحاولة لاحقاً</p>
-                <button onclick="location.reload()" class="px-6 py-3 bg-gold text-white rounded-lg font-bold hover:bg-gold-light transition-colors">
-                    تحديث الصفحة
-                </button>
-            </div>
-        `;
+        console.error('Error loading professions:', error);
     }
 }
 
-// Display professions in grid
-function displayProfessions(professions) {
-    const grid = document.getElementById('professionsGrid');
-    const resultsCount = document.getElementById('resultsCount');
-    const noResults = document.getElementById('noResults');
+// Custom Alert Functions
+function showCustomAlert(message, duration = 5000) {
+    const container = document.getElementById('customAlertContainer');
+    const msgElement = document.getElementById('customAlertMessage');
+    if (!container || !msgElement) return;
     
-    if (professions.length === 0) {
-        grid.classList.add('hidden');
-        noResults.classList.remove('hidden');
-        resultsCount.textContent = '0';
-        return;
-    }
+    msgElement.textContent = message;
+    container.classList.remove('opacity-0', '-translate-y-4');
+    container.classList.add('opacity-100', 'translate-y-0');
     
-    grid.classList.remove('hidden');
-    noResults.classList.add('hidden');
-    resultsCount.textContent = professions.length;
-    
-    grid.innerHTML = professions.map(profession => createProfessionCard(profession)).join('');
+    if (window._alertTimeout) clearTimeout(window._alertTimeout);
+    window._alertTimeout = setTimeout(hideCustomAlert, duration);
 }
 
-// Create profession card HTML (XSS-safe)
-function createProfessionCard(profession) {
-    const professionName = sanitizeForHTML(profession.profession_name_ar || profession.name || profession.professionName || 'غير محدد');
-    const professionCode = sanitizeForHTML(profession.profession_code || profession.code || profession.professionCode || 'N/A');
-    const category = sanitizeForHTML(profession.category || profession.classification || 'أخرى');
-    
-    // Store profession index instead of injecting JSON into onclick
-    const profIndex = professionsData.indexOf(profession);
-    
-    return `
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 hover:border-gold/50 hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer group"
-             onclick="showProfessionByIndex(${profIndex})" 
-             data-testid="profession-card-${professionCode}">
-            <div class="flex items-start justify-between mb-4">
-                <div class="flex-1">
-                    <h3 class="text-xl font-bold text-navy mb-2 group-hover:text-gold transition-colors line-clamp-2">
-                        ${professionName}
-                    </h3>
-                    <div class="flex items-center gap-2 text-sm text-gray-600">
-                        <span class="px-3 py-1 bg-gold/10 text-gold rounded-full font-semibold">
-                            ${professionCode}
-                        </span>
-                        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
-                            ${category}
-                        </span>
-                    </div>
-                </div>
-                <div class="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center group-hover:bg-gold group-hover:text-white transition-colors">
-                    <i class="fas fa-briefcase text-gold group-hover:text-white text-xl transition-colors"></i>
-                </div>
-            </div>
-            
-            <div class="pt-4 border-t border-gray-100">
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">
-                        <i class="fas fa-file-alt text-gold ml-1"></i>
-                        الأوراق المطلوبة
-                    </span>
-                    <span class="text-gold font-semibold group-hover:gap-3 flex items-center gap-2 transition-all">
-                        عرض التفاصيل
-                        <i class="fas fa-arrow-left"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Show profession by index (safe - no JSON in HTML attributes)
-function showProfessionByIndex(index) {
-    if (index >= 0 && index < professionsData.length) {
-        showProfessionDetails(professionsData[index]);
-    }
+function hideCustomAlert() {
+    const container = document.getElementById('customAlertContainer');
+    if (!container) return;
+    container.classList.add('opacity-0', '-translate-y-4');
+    container.classList.remove('opacity-100', 'translate-y-0');
 }
 
 // Normalize Arabic text for better search
@@ -137,385 +107,602 @@ function normalizeArabic(text) {
         .replace(/[أإآ]/g, 'ا')
         .replace(/[ةه]/g, 'ه')
         .replace(/ى/g, 'ي')
-        .toLowerCase();
+        .replace(/[ـ]/g, '')        // strip tatweel
+        .replace(/\s+/g, ' ')       // collapse whitespace
+        .toLowerCase()
+        .trim();
 }
 
-// Filter professions based on search and category
+// 🚫 GIBBERISH FILTER (ANTI-ABUSE)
+function isGibberish(input) {
+    const norm = normalizeArabic(input);
+    if (!norm || norm.length < 3) return true;
+    
+    // Reject pure numeric / punctuation
+    if (!/[\u0600-\u06FFa-z]/.test(norm)) return true;
+
+    const nonsensicalPatterns = [
+        "انا", "مين", "شو", "وين", "ليش", "مش", "انت", "لا", "ميسي", "رونالدو", "بطيخ", 
+        "كلب", "حيوان", "حمار", "خيل", "ابن", "ملعون", "طيز", "منيك", "شرموط", "عرص",
+        "asd", "qwe", "zxc", "123", "مطرب", "مغني", "فنان", "سعفون", "جربان", "جرابين",
+        "قحبة", "كس", "شلن", "مرا الملعون", "الشراميط", "المنيك", "طيزري", "طيزي",
+        "ليش مين انا", "شو وين", "مش انت", "لاللا", "مواصفات الكلب", "ابن الكلب"
+    ];
+    
+    if (nonsensicalPatterns.some(p => norm.includes(p))) return true;
+    
+    // Check for fake job compounds
+    const fakeCompounds = ["مهندس انا", "مهندس بيت", "عامل مصري", "عامل برميل", "عامل تنين", "عامل فقط", "عامل عام", "عامل عملة", "عامل زريعه", "عامل طوب", "مهندس مجاري", "مهندسين كنادر", "كندرجي"];
+    if (fakeCompounds.some(p => norm.includes(p))) return true;
+    
+    return false;
+}
+
+// 🧠 AI-Logic: Classify ANY profession and get requirements
+function classifyProfession(inputName) {
+    const normName = normalizeArabic(inputName);
+    
+    // Specific check for generic terms that need clarification
+    if (normName === "مهندس") {
+        showCustomAlert("يرجى تحديد نوع المهندس (مثلاً: مهندس معماري، مهندس كهرباء، إلخ)");
+        return null;
+    }
+    if (normName === "طبيب" || normName === "دكتور") {
+        showCustomAlert("يرجى تحديد تخصص الطبيب (مثلاً: طبيب أسنان، طبيب عام، إلخ)");
+        return null;
+    }
+    if (normName === "عامل") {
+        showCustomAlert("يرجى تحديد نوع العمل (مثلاً: عامل مخزن، عامل تعبئة، إلخ)");
+        return null;
+    }
+
+    if (isGibberish(inputName)) return null;
+
+    // 📋 PREDEFINED DOCUMENT TEMPLATES (Fixed Sets)
+    const DOCS = {
+        BASE: [
+            "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند).",
+            "الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء).",
+            "عمل الفحص الطبي والبصمة لدى المراكز المعتمدة للسفارة السعودية (إحضار جواز السفر و 6 صور شخصية حديثة بخلفية بيضاء لكافة المعاملات).",
+            "عقد عمل مصدق من الغرفة التجارية والخارجية السعودية.",
+            "عمل تفويض إلكتروني للمكتب.",
+            "الحصول على شهادة مطعوم السحايا.",
+            "ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه من وزارة الخارجية الأردنية قبل تقديمها."
+        ],
+        ACADEMIC_ADDON: [
+            "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل",
+            "خبرة لمدة سنتين بنفس مسمى التأشيرة"
+        ],
+        ENGINEERING_ADDON: [
+            "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل",
+            "خبرة لمدة سنتين بنفس مسمى التأشيرة",
+            "الحصول على شهادة الاعتماد المهني"
+        ],
+        MEDICAL_ADDON: [
+            "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل",
+            "خبرة لمدة سنتين بنفس مسمى التأشيرة",
+            "الحصول على شهادة الاعتماد المهني (ممارس بلس) و DataFlow"
+        ],
+        EXECUTIVE_ADDON: [
+            "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل",
+            "خبرة لمدة سنتين بنفس مسمى التأشيرة",
+            "السجل التجاري السعودي (في حال كان المسمى مدير عام أو شريك)"
+        ],
+        TECHNICAL_ADDON: [
+            "إحضار شهادة الثانوية العامة (الأصل)",
+            "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة",
+            "الحصول على شهادة الاعتماد المهني"
+        ],
+        SKILLED_SERVICE_ADDON: [
+            "إحضار شهادة مدرسية (الصف العاشر)",
+            "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة",
+            "الحصول على شهادة الاعتماد المهني ومزاولة المهنة"
+        ],
+        LABOUR_ADDON: [
+            "إحضار الشهادة المدرسية (الأصل)"
+        ],
+        DRIVER_ADDON: [
+            "رخصة سياقة سارية المفعول (مختومة من السفارة)"
+        ]
+    };
+
+    let finalReqs = [...DOCS.BASE];
+    let category = "أخرى";
+    let role = "General Role";
+
+    // 🧠 DOCUMENT RULE ENGINE (Category Classifier + Role Refiner)
+    
+    // 0. Generic Title Blocker
+    const genericTitles = ["مهندس", "مدير", "مدراء", "أخصائي", "اخصائي", "أخصائية", "اخصائية", "دكتور", "طبيب"];
+    if (genericTitles.includes(normName)) {
+        let msg = "يرجى إدخال مسمى وظيفي دقيق.";
+        if (normName.includes("مهندس")) msg = "يرجى تحديد تخصص الهندسة بدقة (مثال: مهندس كهرباء، مهندس مدني، مهندس ميكانيك...) للوصول للأوراق الصحيحة.";
+        if (normName.includes("مدير")) msg = "يرجى كتابة المسمى الإداري الكامل للتأشيرة (مثال: مدير إداري، مدير مبيعات، مدير مشاريع...).";
+        if (normName.includes("أخصائي") || normName.includes("اخصائي")) msg = "يرجى تحديد التخصص (مثال: أخصائي تسويق، أخصائي مختبرات...) للوصول للأوراق الصحيحة.";
+        if (normName.includes("دكتور") || normName.includes("طبيب")) msg = "يرجى تحديد تخصص الطب بدقة (مثال: طبيب عام، طبيب أسنان...) للوصول للأوراق الصحيحة.";
+        
+        return {
+            name_ar: inputName,
+            profession_name_ar: inputName,
+            code: "---",
+            category: "تنبيه",
+            role: "Generic Title",
+            requirements: [msg],
+            isAiGenerated: true,
+            isGenericWarning: true
+        };
+    }
+
+    // 1. SOVEREIGN EXECUTIVE EXCLUSIONS (Premium titles - DO NOT MODIFY)
+    if (normName === "رئيس تنفيذي" || normName === "مدير عام" || normName === "مستثمر") {
+        category = "المدراء";
+        role = "Executive / Sovereign";
+        finalReqs.splice(2, 0, ...DOCS.EXECUTIVE_ADDON);
+        if (normName === "مستثمر" || normName === "مدير عام") {
+             finalReqs.splice(4, 0, "السجل التجاري السعودي (في حال كان المسمى مدير عام أو شريك)");
+        }
+    }
+    // 2. MEDICAL SECTOR (Master Template for all medical titles)
+    else if (normName.includes("طبيب") || normName.includes("دكتور") || normName.includes("ممرض") || normName.includes("صيدلي") || normName.includes("فني مختبر") || normName.includes("قابلة")) {
+        category = "الاختصاصيون";
+        role = "Medical Sector";
+        finalReqs.splice(2, 0, ...DOCS.MEDICAL_ADDON);
+    }
+    // 3. ENGINEERING SECTOR — أي مسمى يحتوي "مهندس" (أياً كان التخصص) يأخذ نفس مصفوفة أوراق المهندسين الموحدة
+    else if (normName.includes("مهندس") || normName.includes("هندسه")) {
+        return {
+            name_ar: inputName,
+            profession_name_ar: inputName,
+            code: "---",
+            category: "الاختصاصيون",
+            role: "Engineering Sector",
+            requirements: [
+                "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند).",
+                "الوثائق العسكرية (مشروحات من القيادة العامة، كتاب من التعبئة / قسم شؤون الأفراد العنوان: طبربور دوار الدبابة يكون معك دفتر خدمة العلم / بطاقة إنهاء الخدمة أو الإعفاء).",
+                "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل.",
+                "عمل الفحص الطبي والبصمة لدى المراكز المعتمدة للسفارة السعودية (إحضار جواز السفر و 6 صور شخصية حديثة بخلفية بيضاء لكافة المعاملات).",
+                "خبرة لمدة سنتين بنفس مسمى التأشيرة.",
+                "عقد عمل من الشركة السعودية + خطاب إطلاع مختومين من الغرفة التجارية والخارجية السعودية.",
+                "الحصول على شهادة الاعتماد المهني.",
+                "الحصول على شهادة من موقع مصادقة السعودي.",
+                "عضوية + مزاولة مهنة من نقابة المهندسين الأردنية.",
+                "التسجيل في هيئة المهندسين السعودية.",
+                "عمل تفويض إلكتروني للمكتب.",
+                "الحصول على شهادة مطعوم السحايا."
+            ],
+            isAiGenerated: true
+        };
+    }
+    // 4. ACADEMIC & ADVANCED SECTOR (Specialists, Supervisors, Coordinators)
+    else if (normName.includes("اخصائي") || normName.includes("مشرف") || normName.includes("منسق") || normName.includes("سكرتير") || normName.includes("مدير") || normName.includes("رئيس") || normName.includes("مسؤول")) {
+        
+        // Specific Overrides for Quality / Admin Assistant
+        if (normName.includes("مراقب جودة") || normName.includes("مساعد اداري")) {
+            category = "الفنيون";
+            role = "Quality / Admin Assistant";
+            finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة (الأصل)", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
+            // NO accreditation for these two
+        } else {
+            category = "المدراء";
+            role = "Academic / Management Sector";
+            finalReqs.splice(2, 0, ...DOCS.ACADEMIC_ADDON, "الحصول على شهادة الاعتماد المهني");
+        }
+    }
+    // 5. DRIVING & DOMESTIC SECTOR
+    else if (normName.includes("سائق") || normName.includes("مربية") || normName.includes("منزلي")) {
+        category = "العمال";
+        if (normName.includes("سائق")) {
+            role = "Driving Sector";
+            finalReqs.splice(2, 0, "صورة عن رخصة السياقة مختومة من إدارة الترخيص");
+        } else if (normName.includes("مربية")) {
+            role = "Domestic Nanny";
+            finalReqs.splice(2, 0, "عدم ممانعة من ولي الأمر مصدقة", "شهادة خلو سوابق");
+        } else {
+            role = "Domestic Worker";
+            finalReqs.splice(2, 0, "إحضار الشهادة المدرسية (الأصل)");
+        }
+    }
+    // 6. COMMERCIAL & SALES SECTOR
+    else if (normName.includes("مندوب") || normName.includes("بائع") || normName.includes("مبيعات") || normName.includes("مشتريات") || normName.includes("منسق زهور")) {
+        category = "الكتبة";
+        if (normName.includes("بائع") || normName.includes("منسق زهور")) {
+            role = "Direct Sales / Florist";
+            finalReqs.splice(2, 0, "إحضار شهادة الصف العاشر", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة");
+            // NO accreditation for these
+        } else {
+            role = "Sales / Purchasing Representative";
+            const expYears = normName.includes("مشتريات") ? "سنتين" : "سنة";
+            finalReqs.splice(2, 0, "إحضار الشهادة الجامعية (الأصل) وكشف العلامات الأصل", `خبرة لمدة ${expYears} بنفس مسمى التأشيرة`);
+        }
+    }
+    // 7. CRAFTS & PERSONAL SERVICES
+    else if (normName.includes("مصفف شعر") || normName.includes("حلاق") || normName.includes("طاهي") || normName.includes("شيف") || normName.includes("حداد") || normName.includes("نجار") || normName.includes("كهربائي") || normName.includes("سباك") || normName.includes("ميكانيكي") || normName.includes("ميكانيك") || normName.includes("دهان") || normName.includes("بلاط") || normName.includes("نقاش") || normName.includes("لحام") || normName.includes("خياط") || normName.includes("تكييف") || normName.includes("تبريد") || normName.includes("تمديدات")) {
+        category = "الحرفيون";
+        if (normName.includes("مصفف شعر")) {
+            role = "Hair Stylist";
+            finalReqs.splice(2, 0, "إحضار شهادة الثانوية العامة (الأصل)", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة", "شهادة مزاولة مهنة", "الحصول على شهادة الاعتماد المهني");
+        } else {
+            role = "Crafts / Services";
+            finalReqs.splice(2, 0, "إحضار الشهادة المدرسية (الأصل)", "خبرة لمدة سنة واحدة بنفس مسمى التأشيرة", "شهادة مزاولة مهنة", "الحصول على شهادة الاعتماد المهني");
+        }
+    }
+    // 8. GENERAL LABOUR SECTOR
+    else if (normName.includes("عامل") || normName.includes("تحميل") || normName.includes("تنزيل") || normName.includes("تغليف") || normName.includes("مخزن") || normName.includes("تنظيف") || normName.includes("فراش")) {
+        category = "العمال";
+        role = "General Labour Sector";
+        finalReqs = finalReqs.filter(r => !r.includes("الثانوية العامة") && !r.includes("دبلوم"));
+        finalReqs.splice(2, 0, ...DOCS.LABOUR_ADDON);
+        if (!normName.includes("ملصقات") && !normName.includes("تنظيف خزانات")) {
+            // No accreditation for generic labor
+        }
+    }
+    // 9. FAMILY RECRUITMENT
+    else if (normName.includes("استقدام") || normName.includes("اقامة") || normName.includes("أقامة") || normName.includes("زيارة")) {
+        category = "المعاملات العائلية";
+        role = "Family Recruitment";
+        return {
+            name_ar: inputName,
+            profession_name_ar: inputName,
+            code: "FAMILY",
+            category: category,
+            role: role,
+            requirements: [
+                "حسن سيرة وسلوك من المخابرات العامة (التقديم إلكتروني عبر موقع المخابرات العامة أو من خلال تطبيق سند)",
+                "شهادات الميلاد الأصلية للأولاد مصدقة من الأحوال والخارجية",
+                "عقد الزواج أو شهادة الزواج أصلي مصدق (في حال كان عقد زواج يكون مختوم من قاضي القضاة والمحكمة الشرعية وخارجية أردنية)",
+                "عمل فحص طبي للزوجة من المختبر المعتمد لدى السفارة السعودية (صورة شخصية بخلفية بيضاء + جواز السفر). (إذا كان المولود فوق سن الـ 16 يجب إحضار فحص طبي له أيضاً)",
+                "جواز السفر الجديد + صور شخصية عدد 2 بخلفية بيضاء",
+                "إذا كان المولود أنثى فوق سن 16 إحضار شهادة خلو موانع من المحكمة الشرعية مصدقة من المحكمة وقاضي القضاة ووزارة الخارجية الأردنية",
+                "صورة عن تأشيرة الاستقدام",
+                "حجز موعد لدى مكتب تأشير",
+                "ملاحظة هامة جداً (التصديقات الخارجية): يجب تصديق جميع الأوراق الرسمية والشهادات المطلوبة أعلاه (مثل: حسن السيرة والسلوك، وشهادات الميلاد أو الزواج) من وزارة الخارجية الأردنية قبل تقديمها"
+            ],
+            isAiGenerated: true
+        };
+    }
+
+    return {
+        name_ar: inputName,
+        profession_name_ar: inputName,
+        code: "---",
+        category: category,
+        role: role,
+        requirements: finalReqs,
+        isAiGenerated: true
+    };
+}
+
+// Filter professions based on search
 function filterProfessions() {
     const searchTerm = document.getElementById('searchInput').value.trim();
     const selectedCategory = document.getElementById('categoryFilter').value;
+    const noResults = document.getElementById('noResults');
     
     let filtered = professionsData;
     
-    // Filter by search term
     if (searchTerm) {
         const normalizedSearch = normalizeArabic(searchTerm);
-        filtered = filtered.filter(profession => {
-            const name = normalizeArabic(profession.profession_name_ar || profession.name || profession.professionName || '');
-            const code = (profession.profession_code || profession.code || profession.professionCode || '').toLowerCase();
+        filtered = professionsData.filter(profession => {
+            const name = normalizeArabic(profession.profession_name_ar || profession.name_ar || profession.name || '');
+            const code = (profession.profession_code || profession.code || '').toLowerCase();
             return name.includes(normalizedSearch) || code.includes(searchTerm.toLowerCase());
         });
+
+        // 🧠 AI-Logic Fallback
+        if (filtered.length === 0) {
+            if (isGibberish(searchTerm)) {
+                displayProfessions([]);
+                const noResultsText = noResults.querySelector('p');
+                if (noResultsText) noResultsText.textContent = "يرجى إدخال اسم مهنة واضح أو وصف وظيفي صحيح";
+                return;
+            }
+            
+            // 🔎 التطابق الجزئي: كلمة جزئية من مهنة مركبة معروفة (زهور → منسق زهور)
+            if (window.smartFallback && typeof window.smartFallback.resolvePartial === 'function') {
+                const partial = window.smartFallback.resolvePartial(searchTerm);
+                if (partial) {
+                    displayProfessions([{
+                        name_ar: partial.title,
+                        profession_name_ar: partial.title,
+                        code: "---",
+                        category: partial.label,
+                        requirements: partial.reqs,
+                        note: partial.note || '',
+                        isAiGenerated: true
+                    }]);
+                    return;
+                }
+            }
+
+            const aiProfession = classifyProfession(searchTerm);
+            if (aiProfession) {
+                displayProfessions([aiProfession]);
+                return;
+            }
+        }
     }
     
-    // Filter by category
-    if (selectedCategory) {
-        filtered = filtered.filter(profession => {
-            const category = profession.category || profession.classification || 'أخرى';
-            return category === selectedCategory;
-        });
+    if (selectedCategory && selectedCategory !== 'all') {
+        filtered = filtered.filter(p => (p.category || 'أخرى') === selectedCategory);
     }
     
     displayProfessions(filtered);
 }
 
-// Show profession details in modal (XSS-safe)
-function showProfessionDetails(profession) {
-    currentProfession = profession;
+function displayProfessions(professions) {
+    const grid = document.getElementById('professionsGrid');
+    const resultsCount = document.getElementById('resultsCount');
+    const noResults = document.getElementById('noResults');
     
-    const professionName = profession.profession_name_ar || profession.name || profession.professionName || 'غير محدد';
-    const professionCode = profession.profession_code || profession.code || profession.professionCode || 'N/A';
-    const requirements = profession.requirements || profession.required_documents || getDefaultRequirements();
+    filteredData = professions;
+    renderedCount = 0;
     
-    document.getElementById('modalProfessionName').textContent = professionName;
-    document.getElementById('modalProfessionCode').textContent = professionCode;
-    
-    const requirementsList = document.getElementById('modalRequirementsList');
-    requirementsList.innerHTML = requirements.map(req => `<li class="py-2 border-b border-gray-100 last:border-0">${sanitizeForHTML(req)}</li>`).join('');
-    
-    document.getElementById('professionModal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-// Close profession details modal
-function closeProfessionModal() {
-    document.getElementById('professionModal').classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-
-// Print profession details
-function printProfessionDetails() {
-    if (!currentProfession) return;
-    
-    const professionName = currentProfession.profession_name_ar || currentProfession.name || currentProfession.professionName || 'غير محدد';
-    const professionCode = currentProfession.profession_code || currentProfession.code || currentProfession.professionCode || 'N/A';
-    const requirements = currentProfession.requirements || currentProfession.required_documents || getDefaultRequirements();
-    
-    printProfessionDocument(professionCode, professionName, requirements);
-}
-
-// Download profession details as PDF
-function downloadProfessionPDF() {
-    // For now, this will use the print function
-    // In future, can integrate jsPDF library
-    printProfessionDetails();
-    showToast('جاري تحضير ملف PDF للطباعة...');
-}
-
-// Get default requirements if none provided
-function getDefaultRequirements() {
-    return [
-        'جواز سفر ساري المفعول (صلاحية 6 أشهر على الأقل)',
-        'صور شخصية حديثة (مقاس 4×6، خلفية بيضاء)',
-        'الفحص الطبي المعتمد من المراكز المعتمدة',
-        'الشهادات الأكاديمية (البكالوريوس أو الدبلوم حسب المهنة)',
-        'شهادات الخبرة العملية (إن وجدت)',
-        'تصديق الشهادات من وزارة التعليم العالي الأردنية',
-        'تصديق الشهادات من وزارة الخارجية الأردنية',
-        'تصديق الشهادات من السفارة السعودية',
-        'تفويض إلكتروني (إنجاز) من الكفيل في السعودية',
-        'عقد العمل موثق ومصدق'
-    ];
-}
-
-// Enhanced print function with RESPONSIVE & FLEXIBLE layout (XSS-safe)
-function printProfessionDocument(professionCode, professionName, requirements) {
-    const printWindow = window.open('', '_blank');
-    
-    const safeName = sanitizeForHTML(professionName);
-    const safeCode = sanitizeForHTML(professionCode);
-    
-    // فصل الملاحظة عن الأوراق
-    let actualRequirements = requirements.filter(req => !req.includes('ملاحظة هامة'));
-    let note = requirements.find(req => req.includes('ملاحظة هامة'));
-    
-    // Sanitize requirements
-    const safeRequirements = actualRequirements.map(req => sanitizeForHTML(req));
-    const safeNote = note ? sanitizeForHTML(note.replace('ملاحظة هامة جداً (التصديقات الخارجية): ', '')) : null;
-    
-    // حساب المسافات بشكل ديناميكي حسب عدد البنود
-    const reqCount = actualRequirements.length;
-    let itemMargin = '5px';
-    let itemPadding = '7px';
-    let itemPaddingRight = '45px';  // مسافة كبيرة جداً من الرقم
-    let fontSize = '11.5px';
-    let lineHeight = '1.65';
-    let titleSize = '14.5px';
-    
-    // تعديل المسافات حسب عدد البنود
-    if (reqCount <= 7) {
-        itemMargin = '10px';
-        itemPadding = '11px';
-        itemPaddingRight = '50px';  // مسافة كبيرة جداً
-        fontSize = '13px';
-        lineHeight = '1.75';
-        titleSize = '16px';
-    } else if (reqCount <= 9) {
-        itemMargin = '8px';
-        itemPadding = '9px';
-        itemPaddingRight = '48px';
-        fontSize = '12px';
-        lineHeight = '1.7';
-        titleSize = '15px';
-    } else if (reqCount <= 10) {
-        itemMargin = '6px';
-        itemPadding = '8px';
-        itemPaddingRight = '46px';
-        fontSize = '11.5px';
-        lineHeight = '1.65';
-        titleSize = '14.5px';
-    } else {
-        itemMargin = '5px';
-        itemPadding = '7px';
-        itemPaddingRight = '45px';
-        fontSize = '11px';
-        lineHeight = '1.6';
-        titleSize = '14px';
+    if (professions.length === 0) {
+        grid.classList.add('hidden');
+        noResults.classList.remove('hidden');
+        resultsCount.textContent = '0';
+        removeLoadMoreButton();
+        return;
     }
     
-    const printContent = `
-        <!DOCTYPE html>
-        <html lang="ar" dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <title>الأوراق المطلوبة - ${safeName}</title>
-            <style>
-                @page { 
-                    size: A4; 
-                    margin: 0;
-                }
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                html, body {
-                    width: 210mm;
-                    height: 297mm;
-                    margin: 0;
-                    padding: 0;
-                }
-                body {
-                    font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
-                    direction: rtl;
-                    text-align: right;
-                    color: #1B2A41;
-                    background: white;
-                    padding: 15mm 12mm;
-                    display: flex;
-                    flex-direction: column;
-                    min-height: 297mm;
-                }
-                .print-header {
-                    background: linear-gradient(135deg, #1B2A41 0%, #2a3f5f 100%);
-                    color: white;
-                    padding: 12px 18px;
-                    text-align: center;
-                    border-radius: 5px;
-                    margin-bottom: 12px;
-                    flex-shrink: 0;
-                }
-                .print-header h1 {
-                    font-size: 17px;
-                    margin-bottom: 5px;
-                    font-weight: bold;
-                    letter-spacing: 0.3px;
-                }
-                .print-header .subtitle {
-                    color: #C9A35E;
-                    font-size: 10.5px;
-                    font-weight: bold;
-                    margin-bottom: 6px;
-                }
-                .office-info {
-                    background: rgba(255,255,255,0.1);
-                    padding: 6px;
-                    border-radius: 4px;
-                    font-size: 9px;
-                    display: flex;
-                    justify-content: space-around;
-                    gap: 8px;
-                }
-                .document-title {
-                    background: #C9A35E;
-                    color: white;
-                    padding: 12px;
-                    margin: 10px 0;
-                    border-radius: 5px;
-                    font-size: ${titleSize};
-                    font-weight: bold;
-                    text-align: center;
-                    flex-shrink: 0;
-                    letter-spacing: 0.5px;
-                }
-                .profession-info {
-                    background: #f8f9fa;
-                    padding: 9px;
-                    margin: 8px 0 10px;
-                    border-right: 3px solid #C9A35E;
-                    border-radius: 4px;
-                    font-size: 10.5px;
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 12px;
-                    flex-shrink: 0;
-                }
-                .profession-info strong { color: #1B2A41; font-weight: 600; }
-                .section-title {
-                    color: #1B2A41;
-                    font-size: 12.5px;
-                    font-weight: bold;
-                    margin: 10px 0 8px;
-                    padding-bottom: 5px;
-                    border-bottom: 2px solid #C9A35E;
-                    flex-shrink: 0;
-                }
-                .content-wrapper {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    min-height: 0;
-                }
-                .requirements-list {
-                    margin: 0;
-                    padding: 0;
-                    counter-reset: item;
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-evenly;
-                }
-                .requirements-list li {
-                    padding: ${itemPadding};
-                    padding-right: 0;
-                    margin: ${itemMargin} 0;
-                    margin-right: 32px;
-                    border-bottom: 1px solid #e5e7eb;
-                    list-style: none;
-                    position: relative;
-                    font-size: ${fontSize};
-                    line-height: ${lineHeight};
-                    font-weight: 500;
-                }
-                .requirements-list li:before {
-                    content: counter(item);
-                    counter-increment: item;
-                    position: absolute;
-                    right: -32px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background: #1B2A41;
-                    color: white;
-                    width: 26px;
-                    height: 26px;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: bold;
-                    font-size: 12px;
-                    box-shadow: 0 2px 4px rgba(27, 42, 65, 0.3);
-                }
-                .note-box {
-                    background: #fff9e6;
-                    border: 2px solid #C9A35E;
-                    border-radius: 5px;
-                    padding: 11px;
-                    margin: 10px 0;
-                    font-size: 10px;
-                    line-height: 1.6;
-                    flex-shrink: 0;
-                }
-                .note-box strong {
-                    color: #C9A35E;
-                    font-size: 11px;
-                    font-weight: 600;
-                }
-                .footer {
-                    margin-top: 10px;
-                    padding-top: 8px;
-                    border-top: 1px solid #C9A35E;
-                    text-align: center;
-                    color: #64748b;
-                    font-size: 8.5px;
-                    flex-shrink: 0;
-                }
-                .footer p { margin: 2px 0; }
-                @media print {
-                    html, body {
-                        width: 210mm;
-                        height: 297mm;
-                    }
-                    body { 
-                        print-color-adjust: exact; 
-                        -webkit-print-color-adjust: exact;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="print-header">
-                <h1>مكتب تأشيرات السعودية في الأردن - Saudia-visa.com</h1>
-                <div class="subtitle">المكتب المعتمد والمرخص من السفارة السعودية</div>
-                <div class="office-info">
-                    <span>الدوار الأول - جبل عمان</span>
-                    <span>0789881009</span>
-                    <span>Visa@saudia-visa.com</span>
-                </div>
-            </div>
-            
-            <div class="document-title">الأوراق والمستندات المطلوبة لمهنة: ${safeName}</div>
-            
-            <div class="profession-info">
-                <span><strong>المهنة:</strong> ${safeName}</span>
-                <span><strong>رمز المهنة:</strong> ${safeCode}</span>
-                <span><strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            </div>
-            
-            <div class="content-wrapper">
-                <h2 class="section-title">📋 قائمة الأوراق والمستندات المطلوبة:</h2>
-                <ul class="requirements-list">
-                    ${safeRequirements.map(req => `<li>${req}</li>`).join('')}
-                </ul>
-                
-                ${safeNote ? `
-                <div class="note-box">
-                    <strong>ملاحظة هامة:</strong><br>
-                    ${safeNote}
-                </div>
-                ` : ''}
-            </div>
-            
-            <div class="footer">
-                <p><strong>مكتب تأشيرات السعودية في الأردن</strong> | نخدمكم بأعلى معايير الدقة والاحترافية</p>
-                <p>© ${new Date().getFullYear()} جميع الحقوق محفوظة</p>
-            </div>
-        </body>
-        </html>
+    grid.classList.remove('hidden');
+    noResults.classList.add('hidden');
+    resultsCount.textContent = professions.length;
+    
+    grid.innerHTML = '';
+    renderBatch(professions);
+}
+
+function renderBatch(professions) {
+    const grid = document.getElementById('professionsGrid');
+    const end = Math.min(renderedCount + BATCH_SIZE, professions.length);
+    const slice = professions.slice(renderedCount, end);
+    
+    const frag = document.createDocumentFragment();
+    const temp = document.createElement('div');
+    temp.innerHTML = slice.map((p, i) => createProfessionCard(p, renderedCount + i)).join('');
+    while (temp.firstChild) frag.appendChild(temp.firstChild);
+    grid.appendChild(frag);
+    
+    renderedCount = end;
+    updateLoadMoreButton(professions);
+}
+
+function createProfessionCard(profession, index) {
+    const name = profession.profession_name_ar || profession.name_ar || 'غير محدد';
+    const code = profession.code || '---';
+    const cat = profession.category || 'أخرى';
+    const isAi = profession.isAiGenerated;
+
+    return `
+    <div class="bg-white rounded-2xl p-6 border ${isAi ? 'border-gold bg-gold/5 shadow-md' : 'border-gray-100'} hover:border-gold hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer group profession-card"
+    data-prof-idx="${index}">
+    <div class="flex items-start justify-between mb-4">
+    <div class="flex-1">
+    ${isAi ? '<span class="text-[10px] bg-gold text-white px-2 py-0.5 rounded-full mb-2 inline-block font-bold"><i class="fas fa-robot ml-1"></i>تحليل ذكي</span>' : ''}
+    <h3 class="text-xl font-bold text-navy mb-2 group-hover:text-gold transition-colors line-clamp-2">
+    ${escapeHtml(name)}
+    </h3>
+    <div class="flex items-center gap-2 text-sm text-gray-600">
+    <span class="px-3 py-1 bg-gold/10 text-gold rounded-full font-semibold">${escapeHtml(code)}</span>
+    <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">${escapeHtml(cat)}</span>
+    </div>
+    </div>
+    <div class="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center group-hover:bg-gold group-hover:text-white transition-colors">
+    <i class="fas ${isAi ? 'fa-magic-wand-sparkles' : 'fa-briefcase'} text-gold group-hover:text-white text-xl transition-colors"></i>
+    </div>
+    </div>
+    <div class="pt-4 border-t border-gray-100">
+    <div class="flex items-center justify-between text-sm">
+    <span class="text-gray-600"><i class="fas fa-file-alt text-gold ml-1"></i> الأوراق المطلوبة</span>
+    <span class="text-gold font-semibold flex items-center gap-2 prof-toggle-label">عرض التفاصيل <i class="fas fa-chevron-down transition-transform"></i></span>
+    </div>
+    </div>
+    <!-- منطقة الأوراق القابلة للتوسّع تحت المهنة مباشرة -->
+    <div class="prof-inline-details hidden mt-4 pt-4 border-t border-gold/20" data-details-idx="${index}"></div>
+    </div>
     `;
-    
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    printWindow.onload = function() {
-        setTimeout(() => { printWindow.print(); }, 250);
+}
+
+// يحسب الأوراق المطلوبة لمهنة (مع منطق الجنس وحارس مطعوم السحايا الختامي)
+function computeRequirements(profession) {
+    const name = profession.profession_name_ar || profession.name_ar || '';
+    const code = profession.code || '';
+    let requirements = [...(profession.requirements || [])];
+
+    const selectedGender = (document.getElementById('genderFilter') || {}).value;
+    const seniorPositions = ['مدير', 'رئيس', 'تنفيذي', 'مهندس', 'طبيب'];
+    const isSenior = seniorPositions.some(pos => name.includes(pos));
+
+    if (selectedGender === 'female' && !isSenior) {
+        const femaleReq = "عدم ممانعة من ولي الأمر (للمتزوجة: شهادة زواج + عدم ممانعة الزوج + صورة جوازه) (للعزباء: عدم ممانعة ولي الأمر + قيد فردي + صورة جوازه)";
+        const milIdx = requirements.findIndex(r => r.includes("الوثائق العسكرية"));
+        if (milIdx !== -1) requirements[milIdx] = femaleReq;
+        else requirements.splice(1, 0, femaleReq);
+    }
+
+    const VACCINE_ITEM = "الحصول على شهادة مطعوم السحايا.";
+    const isFamilyRecruitment = name.includes("استقدام") || name.includes("اقامة") || name.includes("إقامة") || code === "FAMILY";
+    requirements = requirements.filter(r => r.replace(/\s+/g, ' ').trim() !== VACCINE_ITEM);
+    if (!isFamilyRecruitment) requirements.push(VACCINE_ITEM);
+
+    return { name, code, requirements, note: profession.note || '' };
+}
+
+// 🔽 يعرض/يطوي الأوراق المطلوبة تحت بطاقة المهنة مباشرة (Inline)
+function toggleProfessionInline(card, profession) {
+    // ── Desktop (≥ 768px): نافذة منبثقة واضحة ──
+    if (window.innerWidth >= 768) {
+        showProfessionDetails(profession);
+        return;
+    }
+
+    // ── Mobile (< 768px): inline تحت البطاقة مباشرة ──
+    const box = card.querySelector('.prof-inline-details');
+    const label = card.querySelector('.prof-toggle-label');
+    if (!box) return;
+
+    // طيّ إذا كانت مفتوحة
+    if (!box.classList.contains('hidden')) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        if (label) label.innerHTML = 'عرض التفاصيل <i class="fas fa-chevron-down transition-transform"></i>';
+        return;
+    }
+
+    const { name, code, requirements, note } = computeRequirements(profession);
+    currentProfession = { ...profession, requirements };
+
+    const list = requirements.map((r, i) => `
+        <li class="flex gap-2 py-1.5 text-sm text-gray-700 leading-relaxed">
+            <span class="flex-shrink-0 w-5 h-5 bg-gold/15 text-gold rounded-full text-xs font-bold flex items-center justify-center">${i + 1}</span>
+            <span class="flex-1">${escapeHtml(r)}</span>
+        </li>`).join('');
+
+    const safeName = escapeHtml(name).replace(/'/g, '&#39;');
+    box.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-bold text-navy flex items-center gap-2">
+                <i class="fas fa-clipboard-list text-gold"></i> الأوراق والمستندات المطلوبة:
+            </h4>
+            <button onclick="event.stopPropagation(); closeInlineProfession(this)" title="إغلاق" aria-label="إغلاق"
+                class="w-14 h-14 flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-600 transition flex-shrink-0 text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ol class="space-y-1 mb-4">${list}</ol>
+        ${note ? `<div class="bg-amber-50 border-r-4 border-amber-400 p-3 rounded-lg mb-4">
+            <p class="text-xs text-amber-900"><i class="fas fa-exclamation-circle ml-1"></i> ملاحظة: ${escapeHtml(note)}</p>
+        </div>` : ''}
+        <div class="bg-blue-50 border-r-4 border-blue-400 p-3 rounded-lg mb-4">
+            <p class="text-xs text-blue-900"><i class="fas fa-info-circle ml-1"></i> قد تختلف بعض المتطلبات حسب الحالة الفردية، يرجى التواصل مع مكتبنا المعتمد.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+            <button onclick="event.stopPropagation(); printInlineProfession(this)" data-code="${escapeHtml(code)}" data-name="${safeName}"
+                class="flex-1 bg-gold hover:bg-gold-light text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                <i class="fas fa-print"></i> طباعة الأوراق
+            </button>
+            <a href="https://wa.me/962789881009?text=${encodeURIComponent('مرحباً Saudia-visa، أود الاستفسار عن إجراءات تأشيرة مهنة: ' + name + '.')}"
+               target="_blank" rel="noopener nofollow" data-keep-msg onclick="event.stopPropagation()"
+               class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                <i class="fab fa-whatsapp"></i> استفسار واتساب
+            </a>
+        </div>`;
+    box.classList.remove('hidden');
+    if (label) label.innerHTML = 'إخفاء التفاصيل <i class="fas fa-chevron-up transition-transform"></i>';
+    // خزّن الأوراق على المنطقة لاستخدامها في الطباعة
+    box._requirements = requirements;
+    box._profName = name;
+    box._profCode = code;
+}
+
+// طباعة من البطاقة الـ inline
+function printInlineProfession(btn) {
+    const box = btn.closest('.prof-inline-details');
+    if (box && box._requirements) {
+        printProfessionDocument(box._profCode, box._profName, [...box._requirements]);
+    }
+}
+
+// إغلاق منطقة الأوراق المعروضة inline ضمن البطاقة
+function closeInlineProfession(btn) {
+    const box = btn.closest('.prof-inline-details');
+    if (!box) return;
+    const card = box.closest('[data-prof-idx]');
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    if (card) {
+        const label = card.querySelector('.prof-toggle-label');
+        if (label) label.innerHTML = 'عرض التفاصيل <i class="fas fa-chevron-down transition-transform"></i>';
+    }
+}
+
+function showProfessionDetails(profession) {
+    // استخدام computeRequirements لضمان نفس منطق الأوراق (الجنس + الملاحظة + السحايا الختامي)
+    const { name, code, requirements, note } = computeRequirements(profession);
+    currentProfession = { ...profession, requirements };
+
+    document.getElementById('modalProfessionName').textContent = name;
+    document.getElementById('modalProfessionCode').textContent = code;
+    document.getElementById('modalRequirementsList').innerHTML = requirements.map(req =>
+        `<li class="py-2 border-b border-gray-100 last:border-0">${escapeHtml(req)}</li>`
+    ).join('');
+
+    // ملاحظة خارج البنود (مثل بائع مباشر)
+    const noteEl = document.getElementById('modalNoteBox');
+    if (noteEl) {
+        if (note) {
+            noteEl.textContent = note;
+            noteEl.parentElement.classList.remove('hidden');
+        } else {
+            noteEl.parentElement.classList.add('hidden');
+        }
+    }
+
+    const modal = document.getElementById('professionModal');
+    professionModalScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    modal.classList.remove('hidden');
+    document.body.style.width = '100%';
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeProfessionModal() {
+    document.getElementById('professionModal').classList.add('hidden');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.classList.remove('overflow-hidden');
+    // window.scrollTo(0, professionModalScrollY); // Not needed if we don't fix position // ✅ استعادة موضع التمرير
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
     };
 }
 
-// Debounce function for search
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
+function updateLoadMoreButton(professions) {
+    let btn = document.getElementById('loadMoreBtn');
+    if (renderedCount >= professions.length) { if (btn) btn.remove(); return; }
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'loadMoreBtn';
+        btn.className = 'mx-auto mt-8 px-8 py-4 bg-gold text-white rounded-xl font-bold shadow-lg flex items-center gap-3 hover:scale-105 transition-transform';
+        btn.addEventListener('click', () => renderBatch(filteredData));
+        document.getElementById('professionsGrid').parentNode.insertBefore(btn, document.getElementById('professionsGrid').nextSibling);
+    }
+    btn.innerHTML = `<i class="fas fa-plus-circle"></i> تحميل المزيد`;
+}
+
+function removeLoadMoreButton() {
+    const btn = document.getElementById('loadMoreBtn');
+    if (btn) btn.remove();
+}
+
+function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function printProfessionDetails() {
+    if (!currentProfession) return;
+    const name = currentProfession.profession_name_ar || currentProfession.name_ar;
+    const code = currentProfession.code;
+    const requirements = Array.from(document.querySelectorAll('#modalRequirementsList li')).map(li => li.textContent);
+    
+    if (typeof window.printProfessionDocument === 'function') {
+        window.printProfessionDocument(code, name, requirements);
+    } else {
+        window.print();
+    }
+}
+
+function downloadProfessionPDF() {
+    if (!currentProfession) return;
+    const name = currentProfession.profession_name_ar || currentProfession.name_ar;
+    showCustomAlert(`جاري تجهيز ملف PDF لمهنة: ${name}\nيرجى الانتظار قليلاً...`);
+    printProfessionDetails();
 }

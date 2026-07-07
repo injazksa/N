@@ -1,240 +1,231 @@
-# Netlify Configuration for Saudi Visa Website
-# Static HTML/CSS/JS Website
+# ═══════════════════════════════════════════════════════════════
+# Netlify Config — مكتب تأشيرات السعودية | v4.0 | 2026-05-07
+# أداء عالٍ + أمان + WebP + CDN + Brotli
+# ═══════════════════════════════════════════════════════════════
 
 [build]
-  publish = "frontend/public"
-  
+ publish = "frontend/public"
+ command = "echo 'Static site - no build needed'"
+
 [build.environment]
-  NODE_VERSION = "18"
+ NODE_VERSION = "20"
+ NODE_ENV = "production"
 
-# =============================================
-# SECURITY HEADERS - All pages
-# =============================================
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://identity.netlify.com https://cdn.tailwindcss.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.netlify.com https://*.netlify.app https://identity.netlify.com https://www.google-analytics.com; frame-src 'self' https://www.google.com https://maps.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io"
-    X-DNS-Prefetch-Control = "on"
-    X-Download-Options = "noopen"
-    X-Permitted-Cross-Domain-Policies = "none"
+# ⚡ تحسين CSS و JS تلقائياً
+[build.processing]
+ skip_processing = false
 
-# =============================================
-# BLOCK ACCESS TO SENSITIVE FILES
-# =============================================
-[[headers]]
-  for = "/.env"
-  [headers.values]
-    X-Robots-Tag = "noindex, nofollow"
+[build.processing.css]
+ bundle = true
+ minify = true
 
-[[headers]]
-  for = "/.git/*"
-  [headers.values]
-    X-Robots-Tag = "noindex, nofollow"
+[build.processing.js]
+ bundle = false
+ minify = true
 
-# =============================================
-# CACHE HEADERS - Static Assets
-# =============================================
-[[headers]]
-  for = "/images/*"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000, stale-while-revalidate=86400"
-    
-[[headers]]
-  for = "/icons/*"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000, stale-while-revalidate=86400"
+[build.processing.html]
+ pretty_urls = false
 
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-    
-[[headers]]
-  for = "/*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
-    
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+[build.processing.images]
+ compress = true
 
-[[headers]]
-  for = "/*.json"
-  [headers.values]
-    Cache-Control = "public, max-age=3600, stale-while-revalidate=600"
-    X-Robots-Tag = "noindex"
-
-[[headers]]
-  for = "/llms.txt"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
-    Content-Type = "text/plain; charset=utf-8"
-    X-Robots-Tag = "all"
-
-# =============================================
-# BLOCK ACCESS TO INTERNAL/CONFIG FILES
-# =============================================
-
-# ALLOW: SEO files first (before blocking wildcards)
+# ═══════════════════════════════════════════════════════════════
+# 🔒 حماية ملفات حساسة
+# ═══════════════════════════════════════════════════════════════
 [[redirects]]
-  from = "/robots.txt"
-  to = "/robots.txt"
-  status = 200
-  force = true
+ from = "/.env*"
+ to = "/404.html"
+ status = 404
+ force = true
 
 [[redirects]]
-  from = "/sitemap.xml"
-  to = "/sitemap.xml"
-  status = 200
-  force = true
+ from = "/.git/*"
+ to = "/404.html"
+ status = 404
+ force = true
 
 [[redirects]]
-  from = "/llms.txt"
-  to = "/llms.txt"
-  status = 200
-  force = true
+ from = "/*.md"
+ to = "/404.html"
+ status = 404
+ force = true
 
 [[redirects]]
-  from = "/manifest.json"
-  to = "/manifest.json"
-  status = 200
-  force = true
+ from = "/*.py"
+ to = "/404.html"
+ status = 404
+ force = true
 
 [[redirects]]
-  from = "/favicon.ico"
-  to = "/favicon.ico"
-  status = 200
-  force = true
+ from = "/node_modules/*"
+ to = "/404.html"
+ status = 404
+ force = true
 
-# BLOCK: Sensitive files
+# ═══════════════════════════════════════════════════════════════
+# 🔁 Single-step redirects: HTTPS + Non-WWW (Task 5)
+# يقلّص سلسلة التحويلات (http://www → https://www → https://) إلى قفزة واحدة
+# ═══════════════════════════════════════════════════════════════
 [[redirects]]
-  from = "/.env"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/.git/*"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "http://www.saudia-visa.com/*"
+ to = "https://saudia-visa.com/:splat"
+ status = 301
+ force = true
 
 [[redirects]]
-  from = "/.gitignore"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "http://saudia-visa.com/*"
+ to = "https://saudia-visa.com/:splat"
+ status = 301
+ force = true
 
 [[redirects]]
-  from = "/config.yml"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "https://www.saudia-visa.com/*"
+ to = "https://saudia-visa.com/:splat"
+ status = 301
+ force = true
+
+# ═══════════════════════════════════════════════════════════════
+# 🔄 روابط نظيفة (بدون .html) + توجيه مقالات القديمة
+# ═══════════════════════════════════════════════════════════════
+[[redirects]]
+ from = "/post?id=work-visa-guide-2025"
+ to = "/blog/work-visa-comprehensive-2026.html"
+ status = 301
 
 [[redirects]]
-  from = "/project-structure.txt"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "/post?id=work-visa"
+ to = "/blog/work-visa-comprehensive-2026.html"
+ status = 301
 
 [[redirects]]
-  from = "/DEPLOY.md"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "/post?id=umrah"
+ to = "/blog/umrah-visa-guide-2026.html"
+ status = 301
 
 [[redirects]]
-  from = "/README.md"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "/post?id=tourist"
+ to = "/blog/tourist-visa-guide.html"
+ status = 301
 
 [[redirects]]
-  from = "/professions_processed.json"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "/post?id=family"
+ to = "/blog/family-sponsorship-guide.html"
+ status = 301
 
 [[redirects]]
-  from = "/professions_updated.json"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "/post.html"
+ to = "/blog.html"
+ status = 301
 
 [[redirects]]
-  from = "/design_guidelines.json"
-  to = "/404.html"
-  status = 404
-  force = true
+ from = "/post"
+ to = "/blog.html"
+ status = 301
 
-# =============================================
-# CLEAN URL REDIRECTS
-# =============================================
+# ─── روابط نظيفة ─────────────────────────────────────────────
 [[redirects]]
-  from = "/professions"
-  to = "/professions.html"
-  status = 200
+ from = "/work-visa"
+ to = "/work-visa.html"
+ status = 200
 
 [[redirects]]
-  from = "/blog"
-  to = "/blog.html"
-  status = 200
+ from = "/other-services"
+ to = "/other-services.html"
+ status = 200
 
 [[redirects]]
-  from = "/calculator"
-  to = "/calculator.html"
-  status = 200
+ from = "/labor-exam"
+ to = "/saudi-labor-exam-jordan.html"
+ status = 200
 
 [[redirects]]
-  from = "/certificates"
-  to = "/certificates.html"
-  status = 200
+ from = "/saudi-labor-exam"
+ to = "/saudi-labor-exam-jordan.html"
+ status = 200
 
 [[redirects]]
-  from = "/professional"
-  to = "/professional.html"
-  status = 200
+ from = "/fahis"
+ to = "/saudi-labor-exam-jordan.html"
+ status = 200
 
 [[redirects]]
-  from = "/terms"
-  to = "/terms.html"
-  status = 200
+ from = "/professions"
+ to = "/professions.html"
+ status = 200
 
 [[redirects]]
-  from = "/privacy"
-  to = "/privacy.html"
-  status = 200
+ from = "/corporate"
+ to = "/corporate.html"
+ status = 200
 
 [[redirects]]
-  from = "/disclaimer"
-  to = "/disclaimer.html"
-  status = 200
+ from = "/calculator"
+ to = "/calculator.html"
+ status = 200
 
 [[redirects]]
-  from = "/about"
-  to = "/about.html"
-  status = 200
+ from = "/professional"
+ to = "/professional.html"
+ status = 200
 
 [[redirects]]
-  from = "/work-visa"
-  to = "/work-visa.html"
-  status = 200
+ from = "/certificates"
+ to = "/certificates.html"
+ status = 200
 
 [[redirects]]
-  from = "/corporate"
-  to = "/corporate.html"
-  status = 200
+ from = "/blog"
+ to = "/blog.html"
+ status = 200
 
-# 404 page - catch all unknown routes
 [[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
-  force = false
+ from = "/about"
+ to = "/about.html"
+ status = 200
+
+[[redirects]]
+ from = "/faq"
+ to = "/faq.html"
+ status = 200
+
+[[redirects]]
+ from = "/privacy"
+ to = "/privacy.html"
+ status = 200
+
+[[redirects]]
+ from = "/terms"
+ to = "/terms.html"
+ status = 200
+
+[[redirects]]
+ from = "/disclaimer"
+ to = "/disclaimer.html"
+ status = 200
+
+# ─── روابط مدونة نظيفة ───────────────────────────────────────
+[[redirects]]
+ from = "/blog/umrah"
+ to = "/blog/umrah-visa-guide-2026.html"
+ status = 200
+
+[[redirects]]
+ from = "/blog/work"
+ to = "/blog/work-visa-comprehensive-2026.html"
+ status = 200
+
+[[redirects]]
+ from = "/blog/tourist"
+ to = "/blog/tourist-visa-guide.html"
+ status = 200
+
+[[redirects]]
+ from = "/blog/family"
+ to = "/blog/family-sponsorship-guide.html"
+ status = 200
+
+# ─── 404 fallback ────────────────────────────────────────────
+[[redirects]]
+ from = "/*"
+ to = "/404.html"
+ status = 404
