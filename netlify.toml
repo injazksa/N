@@ -62,6 +62,42 @@
  status = 404
  force = true
 
+[[redirects]]
+ from = "/package.json"
+ to = "/404.html"
+ status = 404
+ force = true
+
+[[redirects]]
+ from = "/package-lock.json"
+ to = "/404.html"
+ status = 404
+ force = true
+
+[[redirects]]
+ from = "/yarn.lock"
+ to = "/404.html"
+ status = 404
+ force = true
+
+[[redirects]]
+ from = "/tailwind.config.js"
+ to = "/404.html"
+ status = 404
+ force = true
+
+[[redirects]]
+ from = "/design_guidelines.json"
+ to = "/404.html"
+ status = 404
+ force = true
+
+[[redirects]]
+ from = "/scripts/*"
+ to = "/404.html"
+ status = 404
+ force = true
+
 # ═══════════════════════════════════════════════════════════════
 # 🔁 Single-step redirects: HTTPS + Non-WWW (Task 5)
 # يقلّص سلسلة التحويلات (http://www → https://www → https://) إلى قفزة واحدة

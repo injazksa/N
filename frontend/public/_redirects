@@ -10,6 +10,21 @@ http://www.saudia-visa.com/*    https://saudia-visa.com/:splat    301!
 http://saudia-visa.com/*        https://saudia-visa.com/:splat    301!
 https://www.saudia-visa.com/*   https://saudia-visa.com/:splat    301!
 
+# ═══════════════════════════════════════════════════════════════
+# 🔒 حماية الملفات الحساسة — منع أي محاولة قراءة ملفات التكوين
+# ═══════════════════════════════════════════════════════════════
+/.env*                /404.html   404!
+/.git/*               /404.html   404!
+/.emergent/*          /404.html   404!
+/package.json         /404.html   404!
+/package-lock.json    /404.html   404!
+/yarn.lock            /404.html   404!
+/tailwind.config.js   /404.html   404!
+/design_guidelines.json /404.html 404!
+/scripts/*            /404.html   404!
+/node_modules/*       /404.html   404!
+/backend/*            /404.html   404!
+
 # Old post.html dynamic URLs → New static blog pages (301 Permanent)
 /post?id=work-visa-guide-2025              /blog/work-visa-comprehensive-2026.html  301
 /post?id=work-visa                         /blog/work-visa-comprehensive-2026.html  301

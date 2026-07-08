@@ -11,7 +11,7 @@
  * هذا الملف هو SW الوحيد — تم حذف advanced-service-worker.js
  */
 
-const VERSION = 'v2.3.0-2026-06-16';
+const VERSION = 'v2.4.0-2026-06-16';
 const STATIC_CACHE = `saudia-static-${VERSION}`;
 const RUNTIME_CACHE = `saudia-runtime-${VERSION}`;
 const IMAGE_CACHE = `saudia-images-${VERSION}`;
